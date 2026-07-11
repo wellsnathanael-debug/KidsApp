@@ -1,10 +1,13 @@
 # ⚽ Goal Getters! — Learn & Score
 
-A gamified educational web app for three young footballers (ages 6, 10 and 12).
+A gamified educational web app for three young footballers — **Ezra (6)**, **Avery (10)** and **Sols (12)**.
 Answer questions to earn penalty kicks, defend the goal when you slip up, follow
 step-by-step drawing tutorials, and unlock trophies and custom footballs along the way.
 
-**Everything lives in one file — `index.html` — with zero dependencies and no internet needed.**
+**The whole app lives in `index.html` with zero dependencies** (the extra files are just the
+home-screen icons and web-app manifest).
+
+Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
 
 ## Running it
 
@@ -16,8 +19,8 @@ Progress (high scores, trophies, unlocks) is saved per player in the browser's l
 
 ## How it works
 
-1. **Pick your player** — Age 6 🦁, Age 10 🦊 or Age 12 🐺. Each profile has its own
-   questions, difficulty, saved progress and trophies.
+1. **Pick your player** — Ezra 🦁 (6), Avery 🦊 (10) or Sols 🐺 (12). Each profile has its
+   own questions, difficulty, saved progress and trophies.
 2. **Penalty Shootout** — 5 rounds against the Rival Robots:
    - Answer a question correctly → **you take a penalty**. Swipe (finger/stylus) or drag
      (mouse) from the ball to aim; a longer swipe means more power. Corners beat the keeper!
@@ -33,11 +36,11 @@ Progress (high scores, trophies, unlocks) is saved per player in the browser's l
 
 ## Learning content (UK curriculum-flavoured, UK English throughout)
 
-| Age | Maths | Other |
-|-----|-------|-------|
-| 6   | Addition & subtraction under 20, counting pictures | Word-to-picture matching |
-| 10  | Times tables, fractions of amounts, word problems | UK geography & basic science |
-| 12  | BODMAS, simple algebra, percentages (timed!) | General knowledge |
+| Player | Maths | Other |
+|--------|-------|-------|
+| Ezra (6)  | Addition & subtraction under 20, counting pictures | Word-to-picture matching |
+| Avery (10)| Times tables, fractions of amounts, word problems starring the three of them | UK geography & basic science |
+| Sols (12) | BODMAS, simple algebra, percentages (timed!) | General knowledge |
 
 Age 6 gets bigger buttons, simpler wording and no timer; ages 10 and 12 race a gentle
 countdown for extra challenge.

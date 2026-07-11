@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Goal Getters">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#4cbf5b">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Goal Getters! ⚽ Learn &amp; Score</title>
 <style>
 /* ============================================================
@@ -246,23 +252,24 @@ footer.note{text-align:center;color:rgba(255,255,255,.85);font-size:.8rem;margin
 <div id="screen-profile" class="screen">
   <h1 class="logo"><span class="ball">⚽</span> Goal Getters!</h1>
   <p class="tagline">Answer questions, score goals, draw brilliant designs — become a football legend! 🏆</p>
+  <p class="tagline" style="font-size:clamp(1.1rem,3vw,1.5rem);font-weight:700">Who's playing today?</p>
   <div class="profiles">
     <button class="profile-card p6" data-age="6">
       <span class="avatar">🦁</span>
-      <h2>Age 6</h2>
-      <p>Counting, easy sums and picture puzzles</p>
+      <h2>Ezra</h2>
+      <p>Age 6 · Counting, easy sums and picture puzzles</p>
       <span class="best" data-best="6">Best score: 0</span>
     </button>
     <button class="profile-card p10" data-age="10">
       <span class="avatar">🦊</span>
-      <h2>Age 10</h2>
-      <p>Times tables, fractions and UK geography</p>
+      <h2>Avery</h2>
+      <p>Age 10 · Times tables, fractions and UK geography</p>
       <span class="best" data-best="10">Best score: 0</span>
     </button>
     <button class="profile-card p12" data-age="12">
       <span class="avatar">🐺</span>
-      <h2>Age 12</h2>
-      <p>Algebra, percentages and general knowledge</p>
+      <h2>Sols</h2>
+      <p>Age 12 · Algebra, percentages and general knowledge</p>
       <span class="best" data-best="12">Best score: 0</span>
     </button>
   </div>
@@ -470,6 +477,14 @@ function saveStore(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(store)
 let age = 10;                       // current player age (6 | 10 | 12)
 const P = ()=>store.profiles[String(age)];
 
+/* the three Goal Getters — names are display-only; saves stay keyed by age */
+const PLAYERS={
+  6:  {name:"Ezra",  avatar:"🦁"},
+  10: {name:"Avery", avatar:"🦊"},
+  12: {name:"Sols",  avatar:"🐺"}
+};
+const KID_NAMES=["Ezra","Avery","Sols"];
+
 /* ============================================================
    2. SOUND (tiny WebAudio synth — no files needed)
    ============================================================ */
@@ -586,11 +601,12 @@ function genAge10(){
   }
   if(kind==="word"){
     const t = pick([
-      ()=>{const g=rnd(2,5),m=rnd(3,6);return{q:`A team scores ${g} goals in each of ${m} matches. How many goals is that in total?`,ans:g*m};},
-      ()=>{const p=rnd(3,8),s=rnd(4,9);return{q:`There are ${p} packets of stickers with ${s} stickers in each. How many stickers altogether?`,ans:p*s};},
+      ()=>{const n=pick(KID_NAMES),g=rnd(2,5),m=rnd(3,6);return{q:`${n} scores ${g} goals in each of ${m} matches. How many goals is that in total?`,ans:g*m};},
+      ()=>{const n=pick(KID_NAMES),p=rnd(3,8),s=rnd(4,9);return{q:`${n} has ${p} packets of stickers with ${s} stickers in each. How many stickers altogether?`,ans:p*s};},
       ()=>{const t1=rnd(11,25),t2=rnd(11,25);return{q:`Rovers score ${t1} points and City score ${t2} points. How many points were scored in total?`,ans:t1+t2};},
-      ()=>{const n=rnd(20,60),k=rnd(5,15);return{q:`A bus has ${n} seats and ${k} are empty. How many seats are taken?`,ans:n-k};},
-      ()=>{const w=rnd(2,6);return{q:`One football costs £${w}. How much do 3 footballs cost, in pounds?`,ans:w*3};}
+      ()=>{const n=pick(KID_NAMES),k=rnd(20,60),e=rnd(5,15);return{q:`${n}'s team bus has ${k} seats and ${e} are empty. How many seats are taken?`,ans:k-e};},
+      ()=>{const n=pick(KID_NAMES),w=rnd(2,6);return{q:`${n} buys 3 footballs costing £${w} each. How many pounds is that altogether?`,ans:w*3};},
+      ()=>{const a=pick(KID_NAMES),g1=rnd(2,9),g2=rnd(2,9);const b=pick(KID_NAMES.filter(x=>x!==a));return{q:`${a} scores ${g1} goals and ${b} scores ${g2}. How many goals did they score together?`,ans:g1+g2};}
     ])();
     return {text:t.q, options:numOptions(t.ans,5)};
   }
@@ -664,8 +680,9 @@ function askQuestion(){
       if(done) return; done=true;
       if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
       if(ok){ P().correct++; saveStore(); }
-      quizFeedback.textContent = ok ? pick(["Brilliant! 🎉","Spot on! ⭐","Superb! 🙌","Nice one! ✨"])
-                                    : "Good try! The green answer was right.";
+      const kid=PLAYERS[age].name;
+      quizFeedback.textContent = ok ? pick([`Brilliant, ${kid}! 🎉`,"Spot on! ⭐",`Superb, ${kid}! 🙌`,"Nice one! ✨"])
+                                    : `Good try, ${kid}! The green answer was right.`;
       quizFeedback.style.color = ok ? "var(--good)" : "var(--bad)";
       (ok?sfx.good:sfx.bad)();
       setTimeout(()=>{ quizModal.classList.add("hidden"); resolve(ok); }, ok?900:1600);
@@ -1262,9 +1279,10 @@ function endMatch(){
   if(isBest){ p.highScore=game.score; saveStore(); }
   const list=$("#summary-list");
   const won = game.youGoals>game.oppGoals;
+  const kid=PLAYERS[age].name;
   $("#summary-title").textContent =
-    won ? pick(["You beat the Robots! 🎉","Champions! 🏆","What a performance! 🌟"]) :
-    game.youGoals===game.oppGoals ? "A draw — so close! 🤝" : "The Robots sneaked it… rematch? 🤖";
+    won ? pick([`You beat the Robots, ${kid}! 🎉`,`Champion ${kid}! 🏆`,`What a performance, ${kid}! 🌟`]) :
+    game.youGoals===game.oppGoals ? `A draw — so close, ${kid}! 🤝` : `The Robots sneaked it… rematch, ${kid}? 🤖`;
   list.innerHTML="";
   const rows=[
     ["⚽ Final score", `You ${game.youGoals} – ${game.oppGoals} Robots`],
@@ -1619,11 +1637,10 @@ function refreshLocker(){
 /* ============================================================
    11. HUB & PROFILE WIRING
    ============================================================ */
-const AVATARS={6:"🦁",10:"🦊",12:"🐺"};
 function refreshHub(){
   const p=P();
-  $("#hub-avatar").textContent=AVATARS[age];
-  $("#hub-hello-text").textContent=`Hello, Age ${age} superstar!`;
+  $("#hub-avatar").textContent=PLAYERS[age].avatar;
+  $("#hub-hello-text").textContent=`Hello, ${PLAYERS[age].name} the superstar!`;
   $("#stat-best").textContent=p.highScore;
   $("#stat-goals").textContent=p.goals;
   $("#stat-saves").textContent=p.saves;

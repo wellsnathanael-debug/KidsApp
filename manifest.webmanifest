@@ -1,0 +1,14 @@
+{
+  "name": "Goal Getters!",
+  "short_name": "Goal Getters",
+  "description": "Answer questions, score goals and draw brilliant designs — become a football legend!",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#4cbf5b",
+  "theme_color": "#4cbf5b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
