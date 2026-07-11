@@ -1,38 +1,28 @@
-# ⚽ Goal Getters! — Learn & Score
+# ⚽ Goal Getters — Learn & Score (Stadium Night edition)
 
-A gamified educational web app for three young footballers — **Ezra (6)**, **Avery (10)** and **Sols (12)**.
-Answer questions to earn penalty kicks, defend the goal when you slip up, follow
-step-by-step drawing tutorials, and unlock trophies and custom footballs along the way.
+A gamified educational football app for three young footballers — **Ezra (6)**, **Avery (10)** and **Sols (12)**.
+Answer age-appropriate questions to earn penalty kicks in a floodlit stadium, defend the goal,
+win the World Cup, duel each other, and unlock trophies, footballs and your own hand-drawn flag.
 
-**The whole app lives in `index.html` with zero dependencies** (the extra files are just the
+**The whole app lives in `index.html` with zero dependencies** (the extra files are the
 home-screen icons and web-app manifest).
 
 Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
 
-## Running it
+## Game modes
 
-- **Simplest:** double-click `index.html` (or open it in Safari/Chrome). That's it.
-- **iPad:** host the file anywhere (or AirDrop it and open in Safari), then *Share → Add to Home Screen* for a full-screen app feel.
-- **Local server (optional):** `python3 -m http.server` in this folder, then visit `http://localhost:8000`.
-
-Progress (high scores, trophies, unlocks) is saved per player in the browser's local storage.
-
-## How it works
-
-1. **Pick your player** — Ezra 🦁 (6), Avery 🦊 (10) or Sols 🐺 (12). Each profile has its
-   own questions, difficulty, saved progress and trophies.
-2. **Penalty Shootout** — 5 rounds against the Rival Robots:
-   - Answer a question correctly → **you take a penalty**. Swipe (finger/stylus) or drag
-     (mouse) from the ball to aim; a longer swipe means more power. Corners beat the keeper!
-   - Answer wrongly → **the Robots shoot** and you pick where to dive (tap the buttons or
-     use the arrow keys on a keyboard).
-   - Goals score 10 points (streak bonuses stack), saves score 5.
-3. **Drawing Studio** — three step-by-step tutorials (Team Badge 🛡️, Classic Football ⚽,
-   Lion Mascot 🦁) with dotted ghost guides, a colour palette, brush sizes, eraser and undo.
-   Finishing a tutorial unlocks a special football **and** earns a ⭐ Super Shot
-   (freezes the robot keeper) in every shootout.
-4. **Trophy Cabinet & Kit Locker** — collect 10 achievements, choose your football
-   (Classic, Golden, Rainbow, Fireball) and your goalkeeper kit colour.
+- **Shootout** — pick your nation and your opponent (England, Brazil, France, Germany + 8 more),
+  then it's a real best-of-5 penalty shootout: answer a question to earn each kick (wrong answer =
+  blazed over!), swipe to shoot, then pick where to dive for the opponent's kick. Level after five?
+  **Sudden death.** Post and bar included — listen for the ping.
+- **World Cup** — an 8-nation knockout: quarter-final, semi-final, final. Win it all to become
+  World Champion and unlock the Trophy Ball.
+- **Duel** — two players, one iPad, pass-and-play. Each child answers questions for **their own age**,
+  so a 6-year-old can fairly beat a 12-year-old. 5 kicks each, sudden death if level.
+- **Drawing Studio** — four ghost-guided tutorials (Team Badge, Football, Lion Mascot, and
+  **Design Your Flag** — your finished flag flies on the match scoreboard). Each finished tutorial
+  earns a ⭐ Super Shot (freezes the keeper) in every match.
+- **Trophy Cabinet & Kit Locker** — 12 achievements and 5 unlockable footballs.
 
 ## Learning content (UK curriculum-flavoured, UK English throughout)
 
@@ -42,12 +32,20 @@ Progress (high scores, trophies, unlocks) is saved per player in the browser's l
 | Avery (10)| Times tables, fractions of amounts, word problems starring the three of them | UK geography & basic science |
 | Sols (12) | BODMAS, simple algebra, percentages (timed!) | General knowledge |
 
-Age 6 gets bigger buttons, simpler wording and no timer; ages 10 and 12 race a gentle
-countdown for extra challenge.
+The robot keeper also gets sharper the longer your scoring streak — hat-tricks must be earned.
+
+## Running it
+
+- Visit the link above, or open `index.html` directly — no internet needed after that.
+- On iPad: open in Safari → **Share → Add to Home Screen** for a full-screen app with its own icon.
+- Progress (high scores, trophies, unlocks, flags) saves per player in the browser's local storage.
 
 ## Tech notes
 
-- Single-file HTML5 + CSS3 + ES6 JavaScript; two `<canvas>` games (shootout + drawing).
-- Pointer Events (with coalesced events) for smooth finger, Apple Pencil and mouse input.
-- WebAudio synth sound effects (mutable) — no audio files.
-- Hand-rolled CSS rather than a CDN framework so the app works completely offline.
+- Single-file HTML5 + CSS3 + ES6 JavaScript; canvas-rendered stadium (night sky, floodlights,
+  animated crowd, adboards, rippling net) and a layered drawing canvas.
+- Pointer Events (with coalesced events) for smooth finger, Apple Pencil and mouse input;
+  arrow keys work for diving on a keyboard.
+- All sound is synthesised WebAudio — crowd ambience, cheers, whistles, woodwork pings — no audio files.
+- System font stack (renders SF Pro on Apple devices) and hand-rolled CSS, so it works completely offline.
+- Emoji flags render natively on Apple devices; on Windows they may appear as letter codes.
