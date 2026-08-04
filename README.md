@@ -11,18 +11,35 @@ Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
 
 ## Game modes
 
-- **Shootout** — pick your nation and your opponent (England, Brazil, France, Germany + 8 more),
-  then it's a real best-of-5 penalty shootout: answer a question to earn each kick (wrong answer =
-  blazed over!), swipe to shoot, then pick where to dive for the opponent's kick. Level after five?
+- **Shootout** — pick your nation and your opponent from **32 countries**, then it's a real
+  best-of-5 penalty shootout: answer a question to earn each kick (wrong answer = blazed over!),
+  swipe to shoot, then pick where to dive for the opponent's kick. Level after five?
   **Sudden death.** Post and bar included — listen for the ping.
-- **World Cup** — an 8-nation knockout: quarter-final, semi-final, final. Win it all to become
-  World Champion and unlock the Trophy Ball.
+- **World Cup** — three tiers to climb (**Bronze → Silver → Golden**, each unlocked by winning the
+  one before). Every cup is a proper tournament: **three group matches with a league table**
+  (draws allowed), then a semi-final and the final against **boss keepers** — Iron Hands Ivan never
+  dives left, El Pulpo has octopus reach, Robo-Keeper 3000 reads your mind. **Your run is saved**,
+  so you can stop mid-tournament and come back to it tomorrow.
+- **Skills Arena** — three quick games for five spare minutes: **Crossbar Challenge**,
+  **Target Practice** and **Quickfire Maths**. Beat your personal best to win a sticker pack.
 - **Duel** — two players, one iPad, pass-and-play. Each child answers questions for **their own age**,
   so a 6-year-old can fairly beat a 12-year-old. 5 kicks each, sudden death if level.
+- **Sticker Album** — collect **30 stickers** across four sets (Nations, Mascots, Skills and rare
+  foil Goldens). Packs are earned by winning matches, completing daily challenges and finishing
+  drawings, and open one card at a time. Got a spare? **Give it to a brother or sister.**
 - **Drawing Studio** — four ghost-guided tutorials (Team Badge, Football, Lion Mascot, and
   **Design Your Flag** — your finished flag flies on the match scoreboard). Each finished tutorial
   earns a ⭐ Super Shot (freezes the keeper) in every match.
-- **Trophy Cabinet & Kit Locker** — 12 achievements and 5 unlockable footballs.
+- **Trophy Cabinet & Kit Locker** — 19 achievements, cup wins per tier, 5 unlockable footballs and
+  6 **goal celebrations** (knee slide, backflip, robot dance, shirt over head, heart hands).
+
+## Coming back tomorrow
+
+- **Daily Challenge** — a new challenge every day ("score 5 goals", "make 3 saves", "win a shootout"),
+  the *same one for all three children* so they can compete. Completing it earns a sticker pack and
+  builds a **streak** — with bonus packs at 3, 7 and 14 days.
+- **Saved World Cup runs** — an unfinished semi-final is waiting when they next open the app.
+- **The album's empty slots** — the most reliable "just one more game" there is.
 
 ## Learning content (UK curriculum-flavoured, UK English throughout)
 
