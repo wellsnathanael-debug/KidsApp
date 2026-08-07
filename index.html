@@ -127,6 +127,17 @@ input#guest-name::placeholder{color:var(--dim);font-weight:500}
 .hub-hello{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 16px;
   font-weight:800;display:flex;align-items:center;gap:10px;font-size:1rem}
 .hub-hello img{height:22px;border-radius:3px;border:1px solid var(--line2)}
+/* rank pill */
+.rank-pill{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);
+  border-radius:13px;padding:8px 15px;min-width:230px}
+.rk-ico{font-size:1.6rem}
+.rk-body{flex:1;min-width:90px}
+.rk-name{font-weight:900;font-style:italic;text-transform:uppercase;font-size:.9rem;letter-spacing:.04em}
+.rk-bar{height:6px;background:rgba(255,255,255,.1);border-radius:999px;margin-top:4px;overflow:hidden}
+.rk-fill{height:100%;border-radius:999px;transition:width .4s ease}
+.rk-next{font-size:.68rem;color:var(--dim);font-weight:700;white-space:nowrap}
+.profile-card .rank-badge{display:inline-block;margin-top:8px;font-size:.72rem;font-weight:900;
+  border-radius:999px;padding:3px 11px;background:var(--panel2);border:1px solid var(--line)}
 .stat-row{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 18px}
 .stat-chip{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:7px 14px;font-weight:700;font-size:.85rem;color:var(--dim)}
 .stat-chip span{color:var(--ink);font-weight:900}
@@ -382,6 +393,15 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
 .sticker.empty .st-name{color:var(--dim)}
 .sticker .st-dupe{position:absolute;top:4px;right:5px;background:var(--green);color:#04170c;border-radius:999px;
   padding:1px 7px;font-size:.62rem;font-weight:900}
+.sticker .st-shiny{position:absolute;top:4px;left:5px;font-size:.75rem}
+.sticker.shiny{border-color:#fbbf24;
+  background:linear-gradient(120deg,rgba(251,191,36,.3),rgba(167,139,250,.22),rgba(56,189,248,.28),rgba(251,191,36,.3));
+  background-size:300% 300%;animation:shimmer 3.5s ease infinite;box-shadow:0 0 16px rgba(251,191,36,.35)}
+@keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.pack-card.shiny .pc-front{background:linear-gradient(120deg,rgba(251,191,36,.45),rgba(167,139,250,.3),rgba(56,189,248,.4),rgba(251,191,36,.45));
+  background-size:300% 300%;animation:shimmer 2.2s ease infinite;border-color:#fbbf24;
+  box-shadow:0 0 34px rgba(251,191,36,.7)}
+.pc-shiny{font-size:.6rem;font-weight:900;color:#fbbf24;letter-spacing:.08em;margin-bottom:2px}
 .pack-cards{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:8px 0 4px}
 .pack-card{width:118px;height:168px;perspective:800px}
 .pc-inner{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d}
@@ -469,6 +489,7 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
 <div id="screen-hub" class="screen hidden">
   <div class="hub-top">
     <div class="hub-hello"><span id="hub-avatar">🦁</span> <span id="hub-hello-text">Hello!</span> <img id="hub-flag" class="hidden" alt="your flag"></div>
+    <div class="rank-pill" id="rank-pill"></div>
     <div style="display:flex;gap:8px">
       <button class="icon-btn" id="btn-sound">🔊 Sound</button>
       <button class="icon-btn" id="btn-switch">👥 Switch</button>
@@ -845,7 +866,9 @@ function blankProfile(){
            celebration:"raise", unlockedCelebrations:["raise"],
            cupSave:null, cupTiers:{bronze:0,silver:0,gold:0},
            daily:{date:"",progress:0,done:false,streak:0,lastDate:""},
-           miniBest:{crossbar:0,targets:0,quickfire:0} };
+           miniBest:{crossbar:0,targets:0,quickfire:0},
+           /* depth update */
+           shiny:{}, rankSeen:0 };
 }
 function loadStore(){
   let s=null;
@@ -857,6 +880,7 @@ function loadStore(){
     const d=blankProfile();
     ["daily","cupTiers","miniBest"].forEach(k=>{ p[k]=Object.assign(d[k], p[k]||{}); });
     if(!p.stickers||typeof p.stickers!=="object") p.stickers={};
+    if(!p.shiny||typeof p.shiny!=="object") p.shiny={};
     if(!Array.isArray(p.unlockedCelebrations)||!p.unlockedCelebrations.length) p.unlockedCelebrations=["raise"];
     return p;
   };
@@ -888,6 +912,40 @@ function info(k){
   return {name:PLAYERS[+k].name,avatar:PLAYERS[+k].avatar,level:+k};
 }
 const me=()=>info(profileKey);
+
+/* ---- skill ranks: derived from lifetime correct answers, so existing saves promote instantly ---- */
+const RANKS=[
+  {id:0,name:"Rookie", icon:"🌱", at:0,   colour:"#3ddc7f"},
+  {id:1,name:"Pro",    icon:"⭐", at:25,  colour:"#38bdf8"},
+  {id:2,name:"Star",   icon:"🌟", at:75,  colour:"#a78bfa"},
+  {id:3,name:"Legend", icon:"👑", at:150, colour:"#fbbf24"}
+];
+function rankOf(profile){
+  const c=(profile||P()).correct||0;
+  let r=RANKS[0];
+  RANKS.forEach(x=>{ if(c>=x.at) r=x; });
+  return r;
+}
+function rankProgress(profile){
+  const p=profile||P(), c=p.correct||0, r=rankOf(p);
+  const next=RANKS[r.id+1];
+  if(!next) return {rank:r,next:null,pct:100,have:c,need:c};
+  const from=r.at;
+  return {rank:r,next,pct:Math.round((c-from)/(next.at-from)*100),have:c-from,need:next.at-from};
+}
+/* question difficulty band == rank id */
+const band=()=>rankOf().id;
+function checkRankUp(){
+  const p=P(), r=rankOf(p);
+  if((p.rankSeen||0)>=r.id) return;
+  p.rankSeen=r.id; saveStore();
+  if(r.id===0) return;
+  sfx.prize();
+  showReward(r.icon,`RANK UP — you're a ${r.name}!`,
+    `Tougher questions and sharper keepers from here. ${RANKS[r.id+1]?`Next: ${RANKS[r.id+1].name} at ${RANKS[r.id+1].at} correct answers.`:"You've reached the top rank!"}`);
+  if(r.id>=2) award("rankStar");
+  if(r.id>=3) award("rankLegend");
+}
 /* names used in word problems — include the visitor once they've set up */
 const NPOOL=()=>KID_NAMES.concat(store.profiles.guest&&store.profiles.guest.name?[store.profiles.guest.name]:[]);
 
@@ -1005,27 +1063,117 @@ const WORD_PICTURES=[
   {word:"dog",e:"🐶"},{word:"cat",e:"🐱"},{word:"fish",e:"🐟"},{word:"apple",e:"🍎"},
   {word:"sun",e:"☀️"},{word:"star",e:"⭐"},{word:"car",e:"🚗"},{word:"boat",e:"⛵"},
   {word:"ball",e:"⚽"},{word:"cake",e:"🎂"},{word:"tree",e:"🌳"},{word:"frog",e:"🐸"},
-  {word:"duck",e:"🦆"},{word:"bus",e:"🚌"},{word:"hat",e:"🎩"},{word:"bee",e:"🐝"}
+  {word:"duck",e:"🦆"},{word:"bus",e:"🚌"},{word:"hat",e:"🎩"},{word:"bee",e:"🐝"},
+  {word:"moon",e:"🌙"},{word:"house",e:"🏠"},{word:"train",e:"🚂"},{word:"snake",e:"🐍"},
+  {word:"pear",e:"🍐"},{word:"crab",e:"🦀"},{word:"drum",e:"🥁"},{word:"kite",e:"🪁"},
+  {word:"owl",e:"🦉"},{word:"sock",e:"🧦"},{word:"cheese",e:"🧀"},{word:"rocket",e:"🚀"},
+  {word:"whale",e:"🐳"},{word:"clock",e:"🕐"},{word:"leaf",e:"🍃"},{word:"horse",e:"🐴"}
 ];
-const COUNT_EMOJI=["⚽","🏆","⭐","🍓","🐞","🎈","🧦","🥅"];
-function genAge6(){
-  const kind=pick(["add","add","sub","count","word"]);
+const COUNT_EMOJI=["⚽","🏆","⭐","🍓","🐞","🎈","🧦","🥅","🍎","🐧","🚗","🌸"];
+const SHAPES=[
+  {name:"circle",e:"⭕"},{name:"square",e:"🟥"},{name:"triangle",e:"🔺"},
+  {name:"star",e:"⭐"},{name:"heart",e:"💜"},{name:"diamond",e:"🔷"}
+];
+const AGE6_FACTS=[
+  {q:"How many legs does a spider have?",a:"8",w:["6","4","10"]},
+  {q:"How many days are there in a week?",a:"7",w:["5","10","12"]},
+  {q:"What colour do you get mixing red and yellow?",a:"Orange",w:["Green","Purple","Blue"]},
+  {q:"How many players are in a football team on the pitch?",a:"11",w:["9","7","13"]},
+  {q:"Which animal says “moo”?",a:"🐄",w:["🐑","🐖","🐔"]},
+  {q:"How many sides does a triangle have?",a:"3",w:["4","5","2"]},
+  {q:"How many wheels does a bicycle have?",a:"2",w:["3","4","1"]},
+  {q:"What do bees make?",a:"Honey",w:["Milk","Bread","Jam"]},
+  {q:"Which one is the biggest?",a:"🐘",w:["🐭","🐈","🐿️"]},
+  {q:"How many months are there in a year?",a:"12",w:["10","7","20"]}
+];
+function genAge6(b){
+  b=b||0;
+  const kinds=["add","add","sub","count","word","fact"];
+  if(b>=1) kinds.push("bonds","double","shape","seq");
+  if(b>=2) kinds.push("times","missing","clock","money");
+  if(b>=3) kinds.push("big","triple","half");
+  const kind=pick(kinds);
   if(kind==="add"){
-    const a=rnd(1,10); const b=rnd(1,Math.max(1,19-a)); const ans=a+b;
-    return {text:`What is ${a} + ${b}?`,options:numOptions(ans,3)};
+    const max=b>=3?30:20;
+    const a=rnd(1,Math.floor(max/2)); const c=rnd(1,Math.max(1,max-1-a));
+    return {text:`What is ${a} + ${c}?`,options:numOptions(a+c,3)};
   }
   if(kind==="sub"){
-    const a=rnd(4,19),b=rnd(1,a-1);
-    return {text:`What is ${a} − ${b}?`,options:numOptions(a-b,3)};
+    const a=rnd(4,b>=3?30:19),c=rnd(1,a-1);
+    return {text:`What is ${a} − ${c}?`,options:numOptions(a-c,3)};
   }
   if(kind==="count"){
-    const n=rnd(3,9),e=pick(COUNT_EMOJI);
+    const n=rnd(3,b>=1?12:9),e=pick(COUNT_EMOJI);
     return {text:"Count them! How many can you see?",emoji:e.repeat(n),options:numOptions(n,2)};
   }
-  const w=pick(WORD_PICTURES);
-  const others=shuffle(WORD_PICTURES.filter(x=>x.word!==w.word)).slice(0,3);
-  return {text:`Which picture shows the word “${w.word}”?`,
-    options:shuffle([{label:w.e,correct:true}].concat(others.map(o=>({label:o.e,correct:false}))))};
+  if(kind==="word"){
+    const w=pick(WORD_PICTURES);
+    const others=shuffle(WORD_PICTURES.filter(x=>x.word!==w.word)).slice(0,3);
+    return {text:`Which picture shows the word “${w.word}”?`,
+      options:shuffle([{label:w.e,correct:true}].concat(others.map(o=>({label:o.e,correct:false}))))};
+  }
+  if(kind==="fact") return bankQuestion(pick(AGE6_FACTS));
+  if(kind==="bonds"){
+    const total=pick([10,20]); const a=rnd(1,total-1);
+    return {text:`${a} + ? = ${total}. What is the missing number?`,options:numOptions(total-a,3)};
+  }
+  if(kind==="double"){
+    const a=rnd(2,b>=3?15:10);
+    return {text:`What is double ${a}?`,options:numOptions(a*2,3)};
+  }
+  if(kind==="half"){
+    const a=rnd(2,12)*2;
+    return {text:`What is half of ${a}?`,options:numOptions(a/2,3)};
+  }
+  if(kind==="shape"){
+    const s=pick(SHAPES);
+    const others=shuffle(SHAPES.filter(x=>x.name!==s.name)).slice(0,3);
+    return {text:`Which one is the ${s.name}?`,
+      options:shuffle([{label:s.e,correct:true}].concat(others.map(o=>({label:o.e,correct:false}))))};
+  }
+  if(kind==="seq"){
+    const step=pick([1,2,2,5,10]); const start=rnd(1,6)*step;
+    const seq=[start,start+step,start+step*2];
+    return {text:`What comes next?  ${seq.join(", ")}, ?`,options:numOptions(start+step*3,step+2)};
+  }
+  if(kind==="times"){
+    const t=pick([2,5,10]),n=rnd(1,10);
+    return {text:`What is ${n} × ${t}?`,options:numOptions(n*t,Math.max(3,t))};
+  }
+  if(kind==="missing"){
+    const a=rnd(2,9),c=rnd(2,9);
+    return {text:`${a} + ? = ${a+c}. What is the missing number?`,options:numOptions(c,3)};
+  }
+  if(kind==="clock"){
+    const h=rnd(1,12);
+    if(b>=3&&Math.random()<.5){
+      const half=Math.random()<.5;
+      return {text:`The clock says ${h}:${half?"30":"15"}. What time is that?`,
+        options:shuffle([
+          {label:`${half?"Half past":"Quarter past"} ${h}`,correct:true},
+          {label:`${half?"Quarter past":"Half past"} ${h}`,correct:false},
+          {label:`${h} o'clock`,correct:false},
+          {label:`Quarter to ${h}`,correct:false}])};
+    }
+    return {text:`The big hand points at 12 and the little hand at ${h}. What time is it?`,
+      options:shuffle([
+        {label:`${h} o'clock`,correct:true},
+        {label:`${h===12?1:h+1} o'clock`,correct:false},
+        {label:`Half past ${h}`,correct:false},
+        {label:`${h===1?12:h-1} o'clock`,correct:false}])};
+  }
+  if(kind==="money"){
+    const coins=pick([[10,10],[20,5],[50,20],[10,5],[20,20]]);
+    return {text:`You have a ${coins[0]}p coin and a ${coins[1]}p coin. How many pence altogether?`,
+      options:numOptions(coins[0]+coins[1],8)};
+  }
+  if(kind==="big"){
+    const a=rnd(10,40),c=rnd(2,9);
+    return {text:`What is ${a} + ${c}?`,options:numOptions(a+c,4)};
+  }
+  /* triple */
+  const a=rnd(1,7),c=rnd(1,7),d=rnd(1,6);
+  return {text:`What is ${a} + ${c} + ${d}?`,options:numOptions(a+c+d,3)};
 }
 const GEO_SCI_10=[
   {q:"What is the capital city of Scotland?",a:"Edinburgh",w:["Glasgow","Cardiff","Aberdeen"]},
@@ -1042,13 +1190,106 @@ const GEO_SCI_10=[
   {q:"What force pulls things down to the ground?",a:"Gravity",w:["Magnetism","Friction","Electricity"]},
   {q:"Which organ pumps blood around your body?",a:"The heart",w:["The brain","The lungs","The stomach"]},
   {q:"What is frozen water called?",a:"Ice",w:["Steam","Snowman","Mud"]},
-  {q:"Which gas do we need to breathe in to live?",a:"Oxygen",w:["Carbon dioxide","Helium","Nitrogen"]}
+  {q:"Which gas do we need to breathe in to live?",a:"Oxygen",w:["Carbon dioxide","Helium","Nitrogen"]},
+  {q:"Which county is known as the Garden of England?",a:"Kent",w:["Devon","Yorkshire","Essex"]},
+  {q:"What is the largest lake in the UK by area?",a:"Lough Neagh",w:["Loch Ness","Windermere","Loch Lomond"]},
+  {q:"Which city is famous for the Angel of the North?",a:"Gateshead",w:["Liverpool","Bristol","Norwich"]},
+  {q:"What separates England from France?",a:"The English Channel",w:["The North Sea","The Irish Sea","The Solent"]},
+  {q:"Which island lies off the south coast of England?",a:"The Isle of Wight",w:["Anglesey","Skye","Jersey"]},
+  {q:"What are the Pennines?",a:"A range of hills",w:["A river","A forest","A lake"]},
+  {q:"Which UK city has the Royal Mile?",a:"Edinburgh",w:["Glasgow","York","Bath"]},
+  {q:"Roughly how many people live in the UK?",a:"About 68 million",w:["About 8 million","About 200 million","About 500 million"]},
+  {q:"Which national park is in the Lake District's county?",a:"Cumbria",w:["Dorset","Kent","Suffolk"]},
+  {q:"What is the process where water turns into vapour?",a:"Evaporation",w:["Condensation","Filtration","Insulation"]},
+  {q:"What do we call animals that eat only plants?",a:"Herbivores",w:["Carnivores","Omnivores","Predators"]},
+  {q:"Which part of a plant takes in water?",a:"The roots",w:["The petals","The leaves","The stem"]},
+  {q:"What is the hardest natural substance?",a:"Diamond",w:["Iron","Granite","Glass"]},
+  {q:"How many bones are in an adult human body?",a:"206",w:["150","306","96"]},
+  {q:"What causes day and night?",a:"Earth spinning on its axis",w:["The Moon moving","Clouds","The Sun switching off"]},
+  {q:"Which planet is closest to the Sun?",a:"Mercury",w:["Venus","Mars","Earth"]},
+  {q:"What is a young frog called before it grows legs?",a:"A tadpole",w:["A cub","A calf","A larva"]},
+  {q:"Which material is the best conductor of electricity?",a:"Copper",w:["Rubber","Wood","Plastic"]},
+  {q:"What do we call a shape with eight sides?",a:"Octagon",w:["Hexagon","Pentagon","Heptagon"]},
+  {q:"What is the boiling point of water in Celsius?",a:"100°C",w:["50°C","0°C","150°C"]},
+  {q:"What is the freezing point of water in Celsius?",a:"0°C",w:["10°C","32°C","-10°C"]},
+  {q:"Which force slows a ball rolling on grass?",a:"Friction",w:["Gravity","Magnetism","Upthrust"]},
+  {q:"What is the main gas in the air we breathe?",a:"Nitrogen",w:["Oxygen","Carbon dioxide","Hydrogen"]}
 ];
-function genAge10(){
-  const kind=pick(["times","times","fraction","word","bank","bank"]);
+function genAge10(b){
+  b=b||0;
+  const kinds=["times","times","fraction","word","bank","bank"];
+  if(b>=1) kinds.push("divide","decimal","perimeter","compare");
+  if(b>=2) kinds.push("area","twostep","round","negtemp");
+  if(b>=3) kinds.push("bigmult","equiv","mean");
+  const kind=pick(kinds);
+  if(kind==="divide"){
+    const d=rnd(2,12),ans=rnd(2,12);
+    return {text:`What is ${d*ans} ÷ ${d}?`,options:numOptions(ans,3)};
+  }
+  if(kind==="decimal"){
+    const a=rnd(1,9),c=rnd(1,9),sum=a+c;
+    const val=(sum/10).toFixed(1);
+    /* near-miss distractors, never zero or duplicated */
+    const cand=[sum+1,sum-1,sum+2,sum-2,sum+3].filter(v=>v>0&&v!==sum);
+    const labels=[val].concat(shuffle(cand).slice(0,3).map(v=>(v/10).toFixed(1)));
+    return {text:`What is 0.${a} + 0.${c}?`,
+      options:shuffle(labels.map(v=>({label:v,correct:v===val})))};
+  }
+  if(kind==="perimeter"){
+    const w=rnd(3,12),h=rnd(3,12);
+    return {text:`A rectangle is ${w}cm by ${h}cm. What is its perimeter, in centimetres?`,
+      options:numOptions(2*(w+h),5)};
+  }
+  if(kind==="area"){
+    const w=rnd(3,12),h=rnd(3,12);
+    return {text:`A rectangle is ${w}cm by ${h}cm. What is its area, in square centimetres?`,
+      options:numOptions(w*h,Math.max(5,w))};
+  }
+  if(kind==="compare"){
+    const opts=[{l:"1/2",v:.5},{l:"1/3",v:1/3},{l:"1/4",v:.25},{l:"3/4",v:.75},{l:"2/3",v:2/3},{l:"1/5",v:.2}];
+    const four=shuffle(opts).slice(0,4);
+    const biggest=four.reduce((m,x)=>x.v>m.v?x:m,four[0]);
+    return {text:"Which fraction is the biggest?",
+      options:shuffle(four.map(o=>({label:o.l,correct:o===biggest})))};
+  }
+  if(kind==="round"){
+    const n=rnd(120,980);
+    return {text:`What is ${n} rounded to the nearest 100?`,options:numOptions(Math.round(n/100)*100,150)};
+  }
+  if(kind==="negtemp"){
+    const start=-rnd(1,9),rise=rnd(2,14);
+    return {text:`The temperature is ${start}°C and rises by ${rise}°C. What is it now?`,
+      options:numOptions(start+rise,4)};
+  }
+  if(kind==="twostep"){
+    const n=pick(NPOOL()),packs=rnd(3,6),each=rnd(3,8),eaten=rnd(2,6);
+    return {text:`${n} buys ${packs} packs of ${each} stickers, then gives away ${eaten}. How many are left?`,
+      options:numOptions(packs*each-eaten,5)};
+  }
+  if(kind==="bigmult"){
+    const a=rnd(12,29),c=rnd(3,9);
+    return {text:`What is ${a} × ${c}?`,options:numOptions(a*c,Math.max(8,a))};
+  }
+  if(kind==="equiv"){
+    const base=pick([[1,2],[1,3],[2,3],[3,4],[1,5]]);
+    const m=rnd(2,5);
+    return {text:`Which fraction is the same as ${base[0]}/${base[1]}?`,
+      options:shuffle([
+        {label:`${base[0]*m}/${base[1]*m}`,correct:true},
+        {label:`${base[0]*m}/${base[1]*m+1}`,correct:false},
+        {label:`${base[0]+m}/${base[1]+m}`,correct:false},
+        {label:`${base[0]*m+1}/${base[1]*m}`,correct:false}])};
+  }
+  if(kind==="mean"){
+    const n=[rnd(2,10),rnd(2,10),rnd(2,10)];
+    const total=n.reduce((a,c)=>a+c,0);
+    const adj=total%3===0?n:[n[0],n[1],n[2]+(3-total%3)];
+    const t=adj.reduce((a,c)=>a+c,0);
+    return {text:`What is the mean (average) of ${adj.join(", ")}?`,options:numOptions(t/3,3)};
+  }
   if(kind==="times"){
-    const a=rnd(2,12),b=rnd(2,12);
-    return {text:`What is ${a} × ${b}?`,options:numOptions(a*b,Math.max(4,a))};
+    const a=rnd(2,12),c=rnd(2,12);
+    return {text:`What is ${a} × ${c}?`,options:numOptions(a*c,Math.max(4,a))};
   }
   if(kind==="fraction"){
     const f=pick([{n:"half",d:2},{n:"quarter",d:4},{n:"third",d:3},{n:"fifth",d:5}]);
@@ -1081,10 +1322,112 @@ const GK_12=[
   {q:"Which ocean is the largest in the world?",a:"The Pacific",w:["The Atlantic","The Indian","The Arctic"]},
   {q:"What is the name of the galaxy we live in?",a:"The Milky Way",w:["Andromeda","The Sombrero","Orion"]},
   {q:"Approximately how many degrees are in a right angle?",a:"90",w:["45","180","360"]},
-  {q:"Which famous scientist developed the theory of gravity after seeing an apple fall?",a:"Isaac Newton",w:["Albert Einstein","Marie Curie","Charles Darwin"]}
+  {q:"Which famous scientist developed the theory of gravity after seeing an apple fall?",a:"Isaac Newton",w:["Albert Einstein","Marie Curie","Charles Darwin"]},
+  {q:"Who was the first woman to win a Nobel Prize?",a:"Marie Curie",w:["Rosalind Franklin","Ada Lovelace","Florence Nightingale"]},
+  {q:"In which year did the Second World War end?",a:"1945",w:["1918","1939","1950"]},
+  {q:"What is the longest river in the world?",a:"The Nile",w:["The Amazon","The Yangtze","The Mississippi"]},
+  {q:"Which country has the most people?",a:"India",w:["China","USA","Indonesia"]},
+  {q:"What does 'photosynthesis' produce as a waste gas?",a:"Oxygen",w:["Carbon dioxide","Methane","Nitrogen"]},
+  {q:"Who painted the Mona Lisa?",a:"Leonardo da Vinci",w:["Michelangelo","Van Gogh","Picasso"]},
+  {q:"What is the smallest prime number?",a:"2",w:["1","3","0"]},
+  {q:"Which mountain range separates Europe and Asia?",a:"The Urals",w:["The Alps","The Andes","The Atlas"]},
+  {q:"What is the chemical symbol for gold?",a:"Au",w:["Ag","Gd","Go"]},
+  {q:"Which blood cells help fight infection?",a:"White blood cells",w:["Red blood cells","Platelets","Plasma"]},
+  {q:"How many sides does a heptagon have?",a:"7",w:["6","8","9"]},
+  {q:"Who wrote 'Oliver Twist'?",a:"Charles Dickens",w:["Jane Austen","George Orwell","Thomas Hardy"]},
+  {q:"What is the capital of Australia?",a:"Canberra",w:["Sydney","Melbourne","Perth"]},
+  {q:"Which force keeps planets orbiting the Sun?",a:"Gravity",w:["Magnetism","Friction","Air resistance"]},
+  {q:"What does DNA stand for the start of?",a:"Deoxyribonucleic acid",w:["Dinitro acid","Double nuclear acid","Dextro acid"]},
+  {q:"In maths, what is the value of pi to two decimal places?",a:"3.14",w:["3.41","3.12","3.16"]},
+  {q:"Which sea creature has three hearts?",a:"The octopus",w:["The shark","The dolphin","The jellyfish"]},
+  {q:"What is the largest desert in the world?",a:"Antarctica",w:["The Sahara","The Gobi","The Kalahari"]},
+  {q:"Which English king had six wives?",a:"Henry VIII",w:["Henry V","Richard III","George III"]},
+  {q:"What is 1 kilometre in metres?",a:"1000",w:["100","10,000","500"]},
+  {q:"Which gas makes up most of the Sun?",a:"Hydrogen",w:["Oxygen","Helium","Carbon"]},
+  {q:"What is the study of earthquakes called?",a:"Seismology",w:["Geology","Meteorology","Ecology"]},
+  {q:"How many players are on a netball team?",a:"7",w:["5","9","11"]},
+  {q:"Which is the only mammal that can truly fly?",a:"The bat",w:["The flying squirrel","The sugar glider","The colugo"]},
+  {q:"What is a group of lions called?",a:"A pride",w:["A pack","A herd","A flock"]},
+  {q:"Which planet has the Great Red Spot?",a:"Jupiter",w:["Mars","Saturn","Neptune"]}
 ];
-function genAge12(){
-  const kind=pick(["bodmas","algebra","percent","bank"]);
+function genAge12(b){
+  b=b||0;
+  const kinds=["bodmas","algebra","percent","bank"];
+  if(b>=1) kinds.push("square","ratio","negative");
+  if(b>=2) kinds.push("brackets","pctchange","primes","hcflcm");
+  if(b>=3) kinds.push("indices","probability","twostepalg");
+  const kind=pick(kinds);
+  if(kind==="square"){
+    if(Math.random()<.5){ const n=rnd(4,15); return {text:`What is ${n}²?`,options:numOptions(n*n,Math.max(6,n))}; }
+    const n=rnd(2,7); return {text:`What is ${n}³?`,options:numOptions(n*n*n,Math.max(8,n*3))};
+  }
+  if(kind==="ratio"){
+    const m=rnd(2,7),a=rnd(2,6),c=rnd(2,6);
+    return {text:`Simplify the ratio ${a*m} : ${c*m}`,
+      options:shuffle([
+        {label:`${a} : ${c}`,correct:true},
+        {label:`${a+1} : ${c}`,correct:false},
+        {label:`${a} : ${c+1}`,correct:false},
+        {label:`${a*2} : ${c}`,correct:false}])};
+  }
+  if(kind==="negative"){
+    const a=-rnd(2,15),c=rnd(2,15);
+    return Math.random()<.5
+      ? {text:`What is ${a} + ${c}?`,options:numOptions(a+c,5)}
+      : {text:`What is ${a} − ${c}?`,options:numOptions(a-c,5)};
+  }
+  if(kind==="brackets"){
+    const a=rnd(2,9),c=rnd(2,9),d=rnd(2,6),e=rnd(2,6);
+    return {text:`Work it out:  ${d} × (${a} + ${c}) − ${e} = ?`,options:numOptions(d*(a+c)-e,7)};
+  }
+  if(kind==="pctchange"){
+    const base=pick([40,60,80,120,200,150]),p=pick([10,20,25,50]);
+    const up=Math.random()<.5;
+    const ans=up?base+base*p/100:base-base*p/100;
+    return {text:`A price of £${base} ${up?"rises":"falls"} by ${p}%. What is the new price, in pounds?`,
+      options:numOptions(ans,Math.max(6,Math.round(base/8)))};
+  }
+  if(kind==="primes"){
+    const primes=[2,3,5,7,11,13,17,19,23,29,31,37];
+    const p=pick(primes);
+    const notPrime=shuffle([4,6,8,9,10,12,14,15,16,18,20,21,22,25,27].filter(n=>n!==p)).slice(0,3);
+    return {text:"Which of these is a prime number?",
+      options:shuffle([{label:String(p),correct:true}].concat(notPrime.map(n=>({label:String(n),correct:false}))))};
+  }
+  if(kind==="hcflcm"){
+    const a=rnd(4,16);
+    let c=rnd(4,16); while(c===a) c=rnd(4,16);   // same number twice is a non-question
+    const gcd=(x,y)=>y?gcd(y,x%y):x;
+    if(Math.random()<.5) return {text:`What is the highest common factor (HCF) of ${a} and ${c}?`,options:numOptions(gcd(a,c),3)};
+    return {text:`What is the lowest common multiple (LCM) of ${a} and ${c}?`,options:numOptions(a*c/gcd(a,c),Math.max(6,a))};
+  }
+  if(kind==="indices"){
+    const n=rnd(2,5),x=rnd(2,4),y=rnd(2,3);
+    return {text:`Simplify:  ${n}^${x} × ${n}^${y} = ${n}^?`,options:numOptions(x+y,2)};
+  }
+  if(kind==="probability"){
+    const total=pick([10,12,20]);
+    const gcd=(p,q)=>q?gcd(q,p%q):p;
+    /* only use counts that actually simplify, so the unsimplified form is a real distractor */
+    const choices=[];
+    for(let n=2;n<=Math.floor(total/2);n++) if(gcd(n,total)>1) choices.push(n);
+    const want=pick(choices);
+    const g=gcd(want,total);
+    const ans=`${want/g}/${total/g}`;
+    return {text:`A bag has ${total} balls and ${want} are red. What is the chance of picking a red one? (as a simplified fraction)`,
+      options:shuffle([
+        {label:ans,correct:true},
+        {label:`${want}/${total}`,correct:false},
+        {label:`${want/g+1}/${total/g}`,correct:false},
+        {label:`${want/g}/${total/g+1}`,correct:false}]
+        .filter((o,i,arr)=>arr.findIndex(x=>x.label===o.label)===i))};
+  }
+  if(kind==="twostepalg"){
+    const x=rnd(2,10),a=rnd(2,7),d=rnd(2,5);
+    /* choose c so the division comes out whole */
+    let c=(d-((a*x)%d))%d; if(c===0) c=d;
+    return {text:`Solve for x:  (${a}x + ${c}) ÷ ${d} = ${(a*x+c)/d}`,options:numOptions(x,3)};
+  }
   if(kind==="bodmas"){
     const t=pick([
       ()=>{const a=rnd(2,9),b=rnd(2,9),c=rnd(2,9);return{q:`${a} + ${b} × ${c}`,ans:a+b*c};},
@@ -1105,10 +1448,10 @@ function genAge12(){
   }
   return bankQuestion(pick(GK_12));
 }
-function genQuestion(level){
-  if(level===6) return genAge6();
-  if(level===10) return genAge10();
-  return genAge12();
+function genQuestion(level,b){
+  if(level===6) return genAge6(b);
+  if(level===10) return genAge10(b);
+  return genAge12(b);
 }
 
 /* ============================================================
@@ -1124,7 +1467,8 @@ function askQuestion(forKey,forName){
     const inf=info(qKey);
     const level=inf.level;
     const kid=forName||inf.name;
-    const q=genQuestion(level);
+    const qBand=rankOf(PROF(qKey)).id;
+    const q=genQuestion(level,qBand);
     if(forName){quizWho.textContent=`${kid} — your kick!`;quizWho.classList.remove("hidden");}
     else quizWho.classList.add("hidden");
     qText.textContent=q.text;
@@ -1137,7 +1481,10 @@ function askQuestion(forKey,forName){
     const finish=(ok)=>{
       if(done) return; done=true;
       if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
-      if(ok){ PROF(qKey).correct++; saveStore(); if(qKey===profileKey) dailyProgress("correct"); }
+      if(ok){
+        PROF(qKey).correct++; saveStore();
+        if(qKey===profileKey){ dailyProgress("correct"); checkRankUp(); }
+      }
       quizFeedback.textContent = ok ? pick([`Brilliant, ${kid}! 🎉`,"Spot on! ⭐",`Superb, ${kid}! 🙌`,"Nice one! ✨"])
                                     : `Good try, ${kid}! The green answer was right.`;
       quizFeedback.style.color = ok ? "var(--green)" : "var(--red)";
@@ -1157,8 +1504,12 @@ function askQuestion(forKey,forName){
       });
       answersEl.appendChild(b);
     });
-    if(level!==6){
-      const total=level===10?25:20; let left=total;
+    /* age 6 stays untimed until Star; older levels tighten slightly with rank */
+    const timed = level!==6 || qBand>=2;
+    if(timed){
+      const base = level===6 ? (qBand>=3?35:45) : (level===10?25:20);
+      const total = level===6 ? base : Math.max(14,base-qBand*3);
+      let left=total;
       timerTrack.classList.remove("hidden"); timerFill.style.width="100%";
       quizTimer=setInterval(()=>{
         left-=.2; timerFill.style.width=Math.max(0,left/total*100)+"%";
@@ -1180,7 +1531,8 @@ const BALLS={
   gold:   {name:"Golden Ball", desc:"Shiny and famous", how:"Finish the Team Badge tutorial"},
   rainbow:{name:"Rainbow Ball", desc:"Full of colour", how:"Finish the Football tutorial"},
   fire:   {name:"Fireball", desc:"Blazing hot!", how:"Finish the Lion Mascot tutorial"},
-  trophy: {name:"Trophy Ball", desc:"For champions only", how:"Win the World Cup"}
+  trophy: {name:"Trophy Ball", desc:"For champions only", how:"Win the Golden Cup"},
+  galaxy: {name:"Galaxy Ball", desc:"Out of this world", how:"Win the Legends Cup"}
 };
 function drawStar(c,cx,cy,r){
   c.beginPath();
@@ -1198,6 +1550,10 @@ function drawBall(c,x,y,r,skin,rot){
   if(skin==="gold"||skin==="trophy"){
     const g=c.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);
     g.addColorStop(0,"#fff3b0");g.addColorStop(.6,"#ffd23f");g.addColorStop(1,"#c8860a");
+    c.fillStyle=g;
+  } else if(skin==="galaxy"){
+    const g=c.createRadialGradient(-r*.3,-r*.35,r*.05,0,0,r);
+    g.addColorStop(0,"#f0abfc");g.addColorStop(.35,"#7c3aed");g.addColorStop(.75,"#1e3a8a");g.addColorStop(1,"#0b1026");
     c.fillStyle=g;
   } else if(skin==="fire"){
     const g=c.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);
@@ -1237,6 +1593,19 @@ function drawBall(c,x,y,r,skin,rot){
     c.fillStyle="rgba(255,240,150,.9)";
     c.beginPath(); c.arc(-r*.3,-r*.3,r*.22,0,Math.PI*2); c.fill();
   }
+  if(skin==="galaxy"){
+    /* starfield inside the ball */
+    c.save(); c.beginPath(); c.arc(0,0,r,0,Math.PI*2); c.clip();
+    c.fillStyle="#ffffff";
+    [[-.55,-.5,.9],[-.1,-.7,.6],[.45,-.4,1],[.6,.15,.7],[.15,.5,.9],[-.45,.35,.6],[-.7,.05,.8],[.3,-.1,.5],[0,.8,.7],[-.25,-.15,.6]]
+      .forEach(([sx,sy,sz])=>{
+        c.globalAlpha=.55+sz*.45;
+        c.beginPath(); c.arc(sx*r,sy*r,r*.045*sz,0,Math.PI*2); c.fill();
+      });
+    c.globalAlpha=1;
+    drawStar(c,-r*.3,-r*.45,r*.16); c.fillStyle="#fef9c3"; c.fill();
+    c.restore();
+  }
   c.beginPath(); c.arc(-r*.35,-r*.42,r*.15,0,Math.PI*2);
   c.fillStyle="rgba(255,255,255,.75)"; c.fill();
   c.restore();
@@ -1246,10 +1615,12 @@ function drawBall(c,x,y,r,skin,rot){
    7b. STICKER ALBUM
    ============================================================ */
 const STICKER_SETS=[
-  {id:"nations", name:"Nations",  colour:"#38bdf8", rarity:1},
-  {id:"mascots", name:"Mascots",  colour:"#3ddc7f", rarity:1},
-  {id:"skills",  name:"Skills",   colour:"#a78bfa", rarity:2},
-  {id:"golden",  name:"Golden",   colour:"#fbbf24", rarity:4}
+  {id:"nations",  name:"Nations",  colour:"#38bdf8", rarity:1},
+  {id:"mascots",  name:"Mascots",  colour:"#3ddc7f", rarity:1},
+  {id:"stadiums", name:"Stadiums", colour:"#f97316", rarity:2},
+  {id:"skills",   name:"Skills",   colour:"#a78bfa", rarity:2},
+  {id:"legends",  name:"Legends",  colour:"#ec4899", rarity:3},
+  {id:"golden",   name:"Golden",   colour:"#fbbf24", rarity:4}
 ];
 const STICKERS=[
   /* Nations (12) */
@@ -1265,30 +1636,64 @@ const STICKERS=[
   {id:"n10",set:"nations",emoji:"🇯🇵",name:"Blue Samurai"},
   {id:"n11",set:"nations",emoji:"🇳🇬",name:"Super Eagles"},
   {id:"n12",set:"nations",emoji:"🇺🇾",name:"La Celeste"},
-  /* Mascots (6) */
+  {id:"n13",set:"nations",emoji:"🏴󠁧󠁢󠁷󠁬󠁳󠁿",name:"The Dragons"},
+  {id:"n14",set:"nations",emoji:"🇵🇹",name:"Seleção"},
+  {id:"n15",set:"nations",emoji:"🇲🇦",name:"Atlas Lions"},
+  {id:"n16",set:"nations",emoji:"🇦🇺",name:"Socceroos"},
+  /* Mascots (10) */
   {id:"m1",set:"mascots",emoji:"🦁",name:"Roary the Lion"},
   {id:"m2",set:"mascots",emoji:"🦊",name:"Foxy"},
   {id:"m3",set:"mascots",emoji:"🐺",name:"Howler"},
   {id:"m4",set:"mascots",emoji:"🐲",name:"Dragon FC"},
   {id:"m5",set:"mascots",emoji:"🐙",name:"Eight Arms"},
   {id:"m6",set:"mascots",emoji:"🤖",name:"Robo Fan"},
-  /* Skills (6) */
+  {id:"m7",set:"mascots",emoji:"🐻",name:"Big Bear"},
+  {id:"m8",set:"mascots",emoji:"🦅",name:"Sky Eagle"},
+  {id:"m9",set:"mascots",emoji:"🦖",name:"Rex the Rampager"},
+  {id:"m10",set:"mascots",emoji:"🐨",name:"Coach Koala"},
+  /* Stadiums (8) */
+  {id:"st1",set:"stadiums",emoji:"🏟️",name:"The Big Bowl"},
+  {id:"st2",set:"stadiums",emoji:"🌙",name:"Floodlight Night"},
+  {id:"st3",set:"stadiums",emoji:"🎺",name:"The Noisy End"},
+  {id:"st4",set:"stadiums",emoji:"🚩",name:"Corner Flag"},
+  {id:"st5",set:"stadiums",emoji:"🥅",name:"The Old Goal"},
+  {id:"st6",set:"stadiums",emoji:"🎪",name:"Cup Final Day"},
+  {id:"st7",set:"stadiums",emoji:"🌧️",name:"Rainy Tuesday"},
+  {id:"st8",set:"stadiums",emoji:"🎉",name:"Trophy Parade"},
+  /* Skills (10) */
   {id:"s1",set:"skills",emoji:"🎯",name:"Top Corner"},
   {id:"s2",set:"skills",emoji:"🧤",name:"Big Save"},
   {id:"s3",set:"skills",emoji:"🌀",name:"Curler"},
   {id:"s4",set:"skills",emoji:"💥",name:"Rocket Shot"},
   {id:"s5",set:"skills",emoji:"🪄",name:"Cheeky Panenka"},
   {id:"s6",set:"skills",emoji:"🧊",name:"Ice Cool"},
-  /* Golden (6, rare) */
+  {id:"s7",set:"skills",emoji:"🦶",name:"Weak Foot Wonder"},
+  {id:"s8",set:"skills",emoji:"🪃",name:"The Boomerang"},
+  {id:"s9",set:"skills",emoji:"🧱",name:"Off the Bar"},
+  {id:"s10",set:"skills",emoji:"🕊️",name:"Dinked Finish"},
+  /* Legends (8) */
+  {id:"l1",set:"legends",emoji:"🦸",name:"The Captain"},
+  {id:"l2",set:"legends",emoji:"🧙",name:"The Magician"},
+  {id:"l3",set:"legends",emoji:"🛡️",name:"The Rock"},
+  {id:"l4",set:"legends",emoji:"🚀",name:"The Flyer"},
+  {id:"l5",set:"legends",emoji:"🎩",name:"Hat-trick Hero"},
+  {id:"l6",set:"legends",emoji:"🥷",name:"The Silent Assassin"},
+  {id:"l7",set:"legends",emoji:"🦾",name:"Iron Keeper"},
+  {id:"l8",set:"legends",emoji:"🧭",name:"The Playmaker"},
+  /* Golden (8, rare) */
   {id:"g1",set:"golden",emoji:"🏆",name:"The Trophy"},
   {id:"g2",set:"golden",emoji:"👟",name:"Golden Boot"},
   {id:"g3",set:"golden",emoji:"🧠",name:"Brain of Steel"},
   {id:"g4",set:"golden",emoji:"⚡",name:"Lightning Feet"},
   {id:"g5",set:"golden",emoji:"👑",name:"Penalty King"},
-  {id:"g6",set:"golden",emoji:"🌟",name:"Legend"}
+  {id:"g6",set:"golden",emoji:"🌟",name:"Legend"},
+  {id:"g7",set:"golden",emoji:"💎",name:"The Diamond"},
+  {id:"g8",set:"golden",emoji:"🪐",name:"Out of This World"}
 ];
+const SHINY_CHANCE=0.08;
 const setInfo=(id)=>STICKER_SETS.find(s=>s.id===id);
 function stickerCount(){ const st=P().stickers||{}; return STICKERS.filter(s=>st[s.id]>0).length; }
+function shinyCount(){ const sh=P().shiny||{}; return STICKERS.filter(s=>sh[s.id]>0).length; }
 function rollSticker(){
   /* rarity: lower weight = rarer */
   const pool=[];
@@ -1306,8 +1711,16 @@ function openOnePack(){
   const p=P();
   if(!p.packs) return;
   p.packs--;
-  const got=[rollSticker(),rollSticker(),rollSticker()];
-  got.forEach(s=>{ p.stickers[s.id]=(p.stickers[s.id]||0)+1; });
+  if(!p.shiny) p.shiny={};
+  const got=[0,1,2].map(()=>{
+    const s=rollSticker();
+    const shiny=Math.random()<SHINY_CHANCE;
+    return {s,shiny};
+  });
+  got.forEach(({s,shiny})=>{
+    p.stickers[s.id]=(p.stickers[s.id]||0)+1;
+    if(shiny) p.shiny[s.id]=(p.shiny[s.id]||0)+1;
+  });
   saveStore();
   packReveal={got,idx:0};
   sfx.prize();
@@ -1317,21 +1730,24 @@ function openOnePack(){
 }
 function renderPackReveal(){
   const wrap=$("#pack-cards"); wrap.innerHTML="";
-  packReveal.got.forEach((s,i)=>{
+  packReveal.got.forEach(({s,shiny},i)=>{
     const inf=setInfo(s.set);
     const isNew=(P().stickers[s.id]||0)<=1;
+    const revealed=i<=packReveal.idx;
     const c=document.createElement("div");
-    c.className="pack-card"+(i<=packReveal.idx?" flipped":"")+(inf.rarity>=4?" foil":"");
+    c.className="pack-card"+(revealed?" flipped":"")+(shiny||inf.rarity>=4?" foil":"")+(shiny?" shiny":"");
     c.style.setProperty("--set",inf.colour);
     c.innerHTML=`<div class="pc-inner">
         <div class="pc-back">⚽</div>
         <div class="pc-front">
+          ${shiny?'<span class="pc-shiny">✨ SHINY ✨</span>':""}
           <span class="pc-emoji">${s.emoji}</span>
           <span class="pc-name">${s.name}</span>
           <span class="pc-set">${inf.name}</span>
           <span class="pc-tag">${isNew?"NEW!":"SWAP"}</span>
         </div></div>`;
     wrap.appendChild(c);
+    if(revealed&&shiny&&i===packReveal.idx) tone(1800,.35,"triangle",0,.09);
   });
   const more=packReveal.idx<packReveal.got.length-1;
   $("#btn-pack-next").textContent = more ? "Next card ▶" : "✨ Add to album";
@@ -1343,17 +1759,21 @@ $("#btn-pack-next").addEventListener("click",()=>{
   else { $("#pack-modal").classList.add("hidden"); packReveal=null; refreshAlbum(); refreshHub(); }
 });
 function checkStickerAchievements(){
-  const p=P(), got=stickerCount();
+  const p=P(), got=stickerCount(), sh=shinyCount();
   if(got>=1) award("collector");
   STICKER_SETS.forEach(set=>{
     const all=STICKERS.filter(s=>s.set===set.id).every(s=>p.stickers[s.id]>0);
     if(all) award("setDone");
   });
   if(got>=STICKERS.length) award("albumDone");
+  if(sh>=1)  award("shiny1");
+  if(sh>=10) award("shiny10");
+  if(sh>=STICKERS.length) award("allShiny");
 }
 function refreshAlbum(){
   const p=P();
-  $("#album-progress").textContent=`${stickerCount()} / ${STICKERS.length}`;
+  $("#album-progress").innerHTML=`${stickerCount()} / ${STICKERS.length}`
+    +(shinyCount()?` &nbsp;·&nbsp; <span style="color:#fbbf24">✨ ${shinyCount()}</span>`:"");
   const packBtn=$("#btn-open-pack");
   packBtn.disabled=!p.packs;
   packBtn.textContent = p.packs ? `🎁 Open a pack (${p.packs})` : "No packs yet — win a match!";
@@ -1370,11 +1790,13 @@ function refreshAlbum(){
     grid.className="album-grid";
     mine.forEach(s=>{
       const n=p.stickers[s.id]||0;
+      const sn=(p.shiny||{})[s.id]||0;
       const cell=document.createElement("button");
-      cell.className="sticker"+(n?"":" empty")+(set.rarity>=4?" foil":"");
+      cell.className="sticker"+(n?"":" empty")+(sn?" shiny":(set.rarity>=4?" foil":""));
       cell.style.setProperty("--set",set.colour);
       cell.innerHTML= n
-        ? `<span class="st-emoji">${s.emoji}</span><span class="st-name">${s.name}</span>${n>1?`<span class="st-dupe">×${n}</span>`:""}`
+        ? `<span class="st-emoji">${s.emoji}</span><span class="st-name">${s.name}</span>
+           ${n>1?`<span class="st-dupe">×${n}</span>`:""}${sn?'<span class="st-shiny">✨</span>':""}`
         : `<span class="st-emoji">❓</span><span class="st-name">???</span>`;
       if(n>1) cell.addEventListener("click",()=>openGiftPicker(s));
       grid.appendChild(cell);
@@ -1505,7 +1927,13 @@ const ACHIEVEMENTS=[
   {id:"dailyHero", ico:"📅", name:"Daily Hero",    desc:"Complete a daily challenge"},
   {id:"streak7",   ico:"🔥", name:"Week on Fire",  desc:"Keep a 7-day streak going"},
   {id:"crossbar",  ico:"🎯", name:"Crossbar King", desc:"Hit the bar in the Crossbar Challenge"},
-  {id:"allTiers",  ico:"🥇", name:"Triple Champion",desc:"Win the Bronze, Silver and Gold cups"}
+  {id:"allTiers",  ico:"🥇", name:"Triple Champion",desc:"Win the Bronze, Silver and Gold cups"},
+  {id:"rankStar",  ico:"🌟", name:"Star Player",    desc:"Reach the Star rank"},
+  {id:"rankLegend",ico:"👑", name:"Living Legend",  desc:"Reach the Legend rank"},
+  {id:"shiny1",    ico:"✨", name:"Ooh, Shiny!",    desc:"Find your first shiny sticker"},
+  {id:"shiny10",   ico:"💫", name:"Shiny Hunter",   desc:"Find 10 shiny stickers"},
+  {id:"allShiny",  ico:"🪐", name:"Shiny Master",   desc:"Find every sticker in shiny"},
+  {id:"legendCup", ico:"👑", name:"Legends Winner", desc:"Win the Legends Cup"}
 ];
 function award(id,profile){
   const p=profile||P();
@@ -2185,7 +2613,8 @@ function keeperProfile(){
   const level = info(game.mode==="duel"? side(game.kicker).pkey : profileKey).level;
   const b=base[level];
   const ramp=Math.min(game.streak,5);
-  let guess=b.guess+ramp*.04, reach=b.reach+ramp*4;
+  const rk=rankOf(game.mode==="duel"?PROF(side(game.kicker).pkey):P()).id;
+  let guess=b.guess+ramp*.04+rk*.03, reach=b.reach+ramp*4+rk*4;
   let biasLeft=0,biasCentre=0;
   if(game.mode==="cup"&&cup){
     const T=TIERS[cup.tier];
@@ -2513,20 +2942,31 @@ $("#btn-kickoff").addEventListener("click",()=>{
    ============================================================ */
 let cup=null;
 const TIERS={
-  bronze:{name:"Bronze Cup", icon:"🥉", colour:"#d97706", desc:"A friendly start — perfect for your first trophy.",
-          keeper:-0.10, reach:-12, packs:2},
-  silver:{name:"Silver Cup", icon:"🥈", colour:"#94a3b8", desc:"Tougher nations and sharper keepers.",
-          keeper:0, reach:0, packs:3},
-  gold:  {name:"Golden Cup", icon:"🏆", colour:"#fbbf24", desc:"The best keepers in the world. Only for champions!",
-          keeper:0.10, reach:12, packs:5}
+  bronze:  {name:"Bronze Cup",  icon:"🥉", colour:"#d97706", desc:"A friendly start — 8 nations, perfect for your first trophy.",
+            keeper:-0.10, reach:-12, packs:2, teams:8},
+  silver:  {name:"Silver Cup",  icon:"🥈", colour:"#94a3b8", desc:"8 nations, tougher opponents and sharper keepers.",
+            keeper:0, reach:0, packs:3, teams:8},
+  gold:    {name:"Golden Cup",  icon:"🏆", colour:"#fbbf24", desc:"16 nations with a quarter-final. Only for champions!",
+            keeper:0.10, reach:12, packs:5, teams:16},
+  platinum:{name:"Platinum Cup",icon:"💎", colour:"#67e8f9", desc:"16 nations and world-class keepers. Very tough!",
+            keeper:0.16, reach:20, packs:7, teams:16},
+  legends: {name:"Legends Cup", icon:"👑", colour:"#f0abfc", desc:"All 32 nations. The hardest trophy in the game.",
+            keeper:0.22, reach:28, packs:10, teams:32}
 };
-const TIER_IDS=["bronze","silver","gold"];
+const TIER_IDS=["bronze","silver","gold","platinum","legends"];
 function tierUnlocked(id){
   const t=P().cupTiers||{};
-  if(id==="bronze") return true;
-  if(id==="silver") return (t.bronze||0)>0;
-  return (t.silver||0)>0;
+  const i=TIER_IDS.indexOf(id);
+  if(i<=0) return true;
+  return (t[TIER_IDS[i-1]]||0)>0;    // beat the tier below to unlock
 }
+/* knockout path depends on how many teams qualify (half the field) */
+function knockoutPath(teams){
+  if(teams>=32) return ["r16","qf","sf","f"];
+  if(teams>=16) return ["qf","sf","f"];
+  return ["sf","f"];
+}
+const ROUND_LABEL={r16:"Round of 16",qf:"Quarter-Final",sf:"Semi-Final",f:"Final"};
 /* boss keepers appear in the knockout rounds */
 const BOSSES=[
   {name:"Iron Hands Ivan",  emoji:"🧤", taunt:"I never dive left. Beat me if you can!",  guess:.06, reach:16, biasLeft:-1},
@@ -2538,19 +2978,23 @@ const BOSSES=[
 ];
 function saveCup(){ P().cupSave=cup; saveStore(); }
 function startCup(tier){
-  const others=shuffle(TEAM_IDS.filter(t=>t!==selMy)).slice(0,7);
+  const size=TIERS[tier].teams;
+  const others=shuffle(TEAM_IDS.filter(t=>t!==selMy)).slice(0,size-1);
+  const field=[selMy].concat(others);
   cup={
-    tier, myTeam:selMy, teams:[selMy].concat(others),
-    phase:"group",                       // group | sf | f | done
+    tier, myTeam:selMy, teams:field, size,
+    path:knockoutPath(size),             // e.g. ["qf","sf","f"]
+    phase:"group",                       // group | r16 | qf | sf | f | done
     groupIdx:0,                          // which group match we're on (0..2)
     table:{},                            // teamId -> {p,w,d,l,gf,ga,pts}
-    results:{sf:[],f:[]},
+    results:{}, oppQueue:null,
     bossIdx:0, alive:true, champion:null
   };
-  /* your group = you + 3 others; the remaining 4 form group B */
-  cup.groupA=cup.teams.slice(0,4);
-  cup.groupB=cup.teams.slice(4,8);
-  cup.groupA.concat(cup.groupB).forEach(id=>{ cup.table[id]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}; });
+  /* split the field into groups of 4 — yours is first */
+  cup.groups=[];
+  for(let i=0;i<size;i+=4) cup.groups.push(field.slice(i,i+4));
+  cup.groupA=cup.groups[0];
+  field.forEach(id=>{ cup.table[id]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}; });
   cup.fixtures=[[0,1],[0,2],[0,3]].map(([a,b])=>[cup.groupA[a],cup.groupA[b]]);
   saveCup();
   renderBracket(); show("bracket");
@@ -2576,28 +3020,37 @@ function simGroupRound(round){
     const ga=rnd(0,5),gb=rnd(0,5);
     tableAdd(a,ga,gb); tableAdd(b,gb,ga);
   });
-  /* group B runs in the background */
-  const gb2=cup.groupB;
-  [[0,1],[2,3]].forEach(([i,j])=>{
-    const a=gb2[i],b=gb2[j];
-    const x=rnd(0,5),y=rnd(0,5);
-    tableAdd(a,x,y); tableAdd(b,y,x);
+  /* the other groups run in the background */
+  cup.groups.slice(1).forEach(grp=>{
+    [[0,1],[2,3]].forEach(([i,j])=>{
+      const a=grp[i],b=grp[j];
+      if(!a||!b) return;
+      const x=rnd(0,5),y=rnd(0,5);
+      tableAdd(a,x,y); tableAdd(b,y,x);
+    });
   });
 }
 function currentBoss(){
-  if(!cup||cup.phase==="group") return null;
-  return cup.phase==="f" ? BOSSES[5] : BOSSES[cup.bossIdx%5];
+  if(!cup||cup.phase==="group"||cup.phase==="done") return null;
+  return cup.phase==="f" ? BOSSES[5] : BOSSES[(cup.bossIdx+cup.path.indexOf(cup.phase))%5];
+}
+/* everyone who qualified from the other groups, best first */
+function otherQualifiers(){
+  const my=P().myTeam;
+  const out=[];
+  cup.groups.forEach((grp,i)=>{
+    sortedGroup(grp).slice(0,2).forEach(t=>{ if(t!==my) out.push(t); });
+  });
+  return out;
 }
 function cupNextOpponent(){
   const my=P().myTeam;
-  if(cup.phase==="group") return cup.fixtures[cup.groupIdx][1]===my?cup.fixtures[cup.groupIdx][0]:cup.fixtures[cup.groupIdx][1];
-  if(cup.phase==="sf"){
-    const qualB=sortedGroup(cup.groupB);
-    const qualA=sortedGroup(cup.groupA);
-    /* you play the other group's opposite qualifier */
-    return qualA[0]===my ? qualB[1] : qualB[0];
+  if(cup.phase==="group"){
+    const fx=cup.fixtures[Math.min(cup.groupIdx,2)];
+    return fx[1]===my?fx[0]:fx[1];
   }
-  return cup.results.sf.find(t=>t!==my)||cup.groupB[0];
+  if(cup.oppQueue&&cup.oppQueue.length) return cup.oppQueue[0];
+  return otherQualifiers()[0]||cup.teams.find(t=>t!==my);
 }
 function cupMatchDone(won,myGoals,oppGoals){
   const my=P().myTeam;
@@ -2608,16 +3061,25 @@ function cupMatchDone(won,myGoals,oppGoals){
     cup.groupIdx++;
     if(cup.groupIdx>=3){
       const qual=sortedGroup(cup.groupA).slice(0,2);
-      if(qual.includes(my)){ cup.phase="sf"; cup.bossIdx=rnd(0,4); }
-      else { cup.alive=false; cup.eliminated="group"; }
+      if(qual.includes(my)){
+        /* build the knockout run: one opponent per round, drawn from the other qualifiers */
+        cup.oppQueue=shuffle(otherQualifiers()).slice(0,cup.path.length);
+        while(cup.oppQueue.length<cup.path.length){
+          cup.oppQueue.push(pick(cup.teams.filter(t=>t!==my)));
+        }
+        cup.phase=cup.path[0];
+        cup.bossIdx=rnd(0,4);
+      } else { cup.alive=false; cup.eliminated="group"; }
     }
     saveCup(); return;
   }
   if(!won){ cup.alive=false; cup.eliminated=cup.phase; saveCup(); return; }
-  if(cup.phase==="sf"){
-    const other=sortedGroup(cup.groupB)[0];
-    cup.results.sf=[my, other===my?cup.groupB[1]:other];
-    cup.phase="f"; cup.bossIdx=5;
+  /* won a knockout round — record it and advance along the path */
+  cup.results[cup.phase]=cupNextOpponent();
+  if(cup.oppQueue&&cup.oppQueue.length) cup.oppQueue.shift();
+  const i=cup.path.indexOf(cup.phase);
+  if(i<cup.path.length-1){
+    cup.phase=cup.path[i+1];
   } else {
     cup.champion=my; cup.alive=false; cup.phase="done";
     winCup();
@@ -2629,14 +3091,17 @@ function winCup(){
   p.cups++;
   p.cupTiers[tier]=(p.cupTiers[tier]||0)+1;
   if(tier==="gold"&&!p.unlockedBalls.includes("trophy")) p.unlockedBalls.push("trophy");
+  if(tier==="legends"&&!p.unlockedBalls.includes("galaxy")) p.unlockedBalls.push("galaxy");
   p.cupSave=null;
   saveStore();
   award("worldChamp");
-  if(p.cupTiers.bronze>0&&p.cupTiers.silver>0&&p.cupTiers.gold>0) award("allTiers");
-  const T=TIERS[tier];
+  if(tier==="legends") award("legendCup");
+  if(TIER_IDS.every(t=>(p.cupTiers[t]||0)>0)) award("allTiers");
+  const T=TIERS[tier], next=TIERS[TIER_IDS[TIER_IDS.indexOf(tier)+1]];
   showReward(T.icon,`${TEAMS[p.myTeam].name} win the ${T.name}!`,
-    tier==="gold" ? "World Champions! You've unlocked the Trophy Ball."
-    : `Brilliant! The ${TIERS[TIER_IDS[TIER_IDS.indexOf(tier)+1]].name} is now unlocked.`);
+    tier==="legends" ? "The hardest trophy in the game is yours — the Galaxy Ball is unlocked!"
+    : tier==="gold" ? "World Champions! You've unlocked the Trophy Ball, and the Platinum Cup."
+    : `Brilliant! The ${next.name} is now unlocked.`);
   givePacks(T.packs,"Champions bonus!");
   checkCelebrationUnlocks();
 }
@@ -2667,26 +3132,27 @@ function renderBracket(){
   gcol.appendChild(note);
   el.appendChild(gcol);
 
-  /* --- knockout columns --- */
-  [["sf","Semi-Final"],["f","Final"]].forEach(([st,label])=>{
+  /* --- knockout columns (one per round in this tier's path) --- */
+  const path=cup.path||["sf","f"];
+  const curIdx = cup.phase==="group" ? -1 : cup.phase==="done" ? path.length : path.indexOf(cup.phase);
+  path.forEach((st,i)=>{
     const col=document.createElement("div"); col.className="b-col";
-    col.innerHTML=`<h4>${label}</h4>`;
+    col.innerHTML=`<h4>${ROUND_LABEL[st]||st}</h4>`;
     const tie=document.createElement("div");
-    const reached = st==="sf" ? cup.phase!=="group" : (cup.phase==="f"||cup.phase==="done");
-    tie.className="tie"+(reached?" mine":"");
+    const reached = curIdx>=i;
+    tie.className="tie"+(reached&&curIdx===i?" mine":"");
     if(!reached){
-      tie.innerHTML=`<div class="t-row" style="opacity:.45"><span class="fl">❓</span> Qualify first…</div>`;
+      tie.innerHTML=`<div class="t-row" style="opacity:.45"><span class="fl">❓</span> ${curIdx<0?"Qualify first…":"Win to reach this"}</div>`;
     } else {
-      const opp = st==="sf" ? (cup.phase==="sf"?cupNextOpponent():(cup.results.sf.find(t=>t!==my)||"?"))
-                            : (cup.results.sf.find(t=>t!==my)||"?");
+      const opp = curIdx===i ? cupNextOpponent() : cup.results[st];
       const oppT=TEAMS[opp];
-      const done = st==="sf" ? (cup.phase==="f"||cup.phase==="done") : cup.phase==="done";
+      const done = curIdx>i;
       tie.innerHTML=`
         <div class="t-row me${done?" winner":""}"><span class="fl">${TEAMS[my].flag}</span> ${TEAMS[my].name} (you)</div>
         <div class="t-row${done?" loser":""}"><span class="fl">${oppT?oppT.flag:"❓"}</span> ${oppT?oppT.name:"TBD"}</div>`;
     }
     col.appendChild(tie);
-    if(st==="f"&&cup.champion){
+    if(i===path.length-1&&cup.champion){
       const w=document.createElement("div");
       w.className="tie"; w.style.borderColor="var(--amber)";
       w.innerHTML=`<div class="t-row winner" style="justify-content:center">${TIERS[cup.tier].icon} ${TEAMS[cup.champion].name} — CHAMPIONS!</div>`;
@@ -2709,9 +3175,9 @@ function renderBracket(){
   if(!cup.alive){
     nextBtn.textContent = cup.champion ? "🏆 Back to Menu" : "🏠 Back to Menu";
   } else {
-    nextBtn.textContent = cup.phase==="f" ? "🏟️ Play the Final!"
-      : cup.phase==="sf" ? "🥅 Play the Semi-Final!"
-      : `▶ Play Match ${cup.groupIdx+1} of 3`;
+    nextBtn.textContent = cup.phase==="group" ? `▶ Play Match ${cup.groupIdx+1} of 3`
+      : cup.phase==="f" ? "🏟️ Play the Final!"
+      : `🥅 Play the ${ROUND_LABEL[cup.phase]||cup.phase}!`;
   }
 }
 $("#btn-cup-next").addEventListener("click",()=>{
@@ -2733,7 +3199,7 @@ function openCupHome(){
   if(saved&&saved.alive){
     const T=TIERS[saved.tier];
     const where = saved.phase==="group" ? `Group match ${Math.min(saved.groupIdx+1,3)} of 3`
-      : saved.phase==="sf" ? "Semi-Final" : "The Final";
+      : (ROUND_LABEL[saved.phase]||"Knockout round");
     box.classList.remove("hidden");
     box.innerHTML=`<div class="resume-inner">
         <div><div class="resume-title">${T.icon} Continue your ${T.name}</div>
@@ -2752,11 +3218,12 @@ function openCupHome(){
     const el=document.createElement("button");
     el.className="tier-card"+(unlocked?"":" locked");
     el.style.setProperty("--tier",T.colour);
+    const prev=TIERS[TIER_IDS[TIER_IDS.indexOf(id)-1]];
     el.innerHTML=`<span class="tier-icon">${unlocked?T.icon:"🔒"}</span>
-      <h3>${T.name}</h3><p>${unlocked?T.desc:(id==="silver"?"Win the Bronze Cup to unlock":"Win the Silver Cup to unlock")}</p>
-      <span class="tier-wins">${wins>0?`🏅 Won ${wins}×`:"Not won yet"}</span>`;
+      <h3>${T.name}</h3><p>${unlocked?T.desc:`Win the ${prev.name} to unlock`}</p>
+      <span class="tier-wins">${wins>0?`🏅 Won ${wins}×`:`${T.teams} nations`}</span>`;
     el.addEventListener("click",()=>{
-      if(!unlocked){ sfx.bad(); showReward("🔒","Locked!",id==="silver"?"Win the Bronze Cup first.":"Win the Silver Cup first."); return; }
+      if(!unlocked){ sfx.bad(); showReward("🔒","Locked!",`Win the ${prev.name} first.`); return; }
       sfx.tap(); pendingTier=id; openTeamSelect("cup");
     });
     grid.appendChild(el);
@@ -3326,13 +3793,25 @@ function refreshHub(){
   $("#stat-tokens").textContent=Math.min(4,p.tutorialsDone.length);
   $("#stat-cups").textContent=p.cups;
   $("#stat-stickers").textContent=`${stickerCount()}/${STICKERS.length}`;
+  const rp=rankProgress();
+  $("#rank-pill").innerHTML=`<span class="rk-ico">${rp.rank.icon}</span>
+    <div class="rk-body"><div class="rk-name" style="color:${rp.rank.colour}">${rp.rank.name}</div>
+      <div class="rk-bar"><div class="rk-fill" style="width:${rp.pct}%;background:${rp.rank.colour}"></div></div></div>
+    <span class="rk-next">${rp.next?`${rp.have}/${rp.need} to ${rp.next.name}`:"Max rank!"}</span>`;
   $("#album-hub-count").textContent=`${stickerCount()} / ${STICKERS.length}`;
   $("#album-hub-packs").textContent=`${p.packs||0} pack${(p.packs||0)===1?"":"s"}`;
   $("#btn-sound").textContent=store.sound?"🔊 Sound":"🔇 Muted";
   refreshDailyCard();
 }
 function refreshProfileBests(){
-  $$("[data-best]").forEach(el=>{el.textContent="Best: "+store.profiles[el.dataset.best].highScore;});
+  $$("[data-best]").forEach(el=>{
+    const p=store.profiles[el.dataset.best];
+    const r=rankOf(p);
+    el.textContent="Best: "+p.highScore;
+    let badge=el.parentElement.querySelector(".rank-badge");
+    if(!badge){ badge=document.createElement("span"); badge.className="rank-badge"; el.after(badge); }
+    badge.innerHTML=`${r.icon} <span style="color:${r.colour}">${r.name}</span>`;
+  });
   refreshGuestCard();
 }
 function selectProfile(key){
