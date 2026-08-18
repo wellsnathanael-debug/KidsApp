@@ -242,6 +242,7 @@ input#guest-name::placeholder{color:var(--dim);font-weight:500}
 .boss-emoji{font-size:2.6rem}
 .boss-name{font-weight:900;font-style:italic;text-transform:uppercase;font-size:1.02rem}
 .boss-taunt{font-size:.84rem;color:var(--dim);font-style:italic;margin-top:2px}
+.boss-hint{font-size:.8rem;color:var(--amber);font-weight:700;margin-top:5px}
 /* cup tiers */
 .tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
 .tier-card{background:var(--panel);border:2px solid var(--tier,var(--line));border-radius:var(--r);
@@ -2753,7 +2754,10 @@ function startMatch(opts){
   show("game"); updateHUD();
   startCrowd(); sfx.whistle(false);
   const boss=game.mode==="cup"?currentBoss():null;
-  if(boss) showMsg(`${boss.emoji} ${boss.name}`,`“${boss.taunt}”`,2200);
+  if(boss){
+    showMsg(`${boss.emoji} ${boss.name}`,`“${boss.taunt}”`,2200);
+    setTip(boss.hint?`💡 ${boss.hint}`:`Beat ${boss.name}!`);
+  }
   nextRound();
 }
 function resetPositions(){
@@ -2900,14 +2904,19 @@ function keeperProfile(){
   const ramp=Math.min(game.streak,5);
   const rk=rankOf(game.mode==="duel"?PROF(side(game.kicker).pkey):P()).id;
   let guess=b.guess+ramp*.04+rk*.03, reach=b.reach+ramp*4+rk*4;
-  let biasLeft=0,biasCentre=0;
+  let biasLeft=0,biasCentre=0,biasRight=0,probAdd=0,powerProof=0,cornerProof=0;
   if(game.mode==="cup"&&cup){
     const T=TIERS[cup.tier];
     guess+=T.keeper; reach+=T.reach;
     const boss=currentBoss();
-    if(boss){ guess+=boss.guess; reach+=boss.reach; biasLeft=boss.biasLeft||0; biasCentre=boss.biasCentre||0; }
+    if(boss){
+      guess+=boss.guess; reach+=boss.reach;
+      biasLeft=boss.biasLeft||0; biasRight=boss.biasRight||0; biasCentre=boss.biasCentre||0;
+      probAdd=boss.probAdd||0; powerProof=boss.powerProof||0; cornerProof=boss.cornerProof||0;
+    }
   }
-  return {guess:clamp(guess,.05,.85), reach:Math.max(40,reach), prob:b.prob, biasLeft, biasCentre};
+  return {guess:clamp(guess,.05,.85), reach:Math.max(40,reach), prob:b.prob,
+          biasLeft, biasRight, biasCentre, probAdd, powerProof, cornerProof};
 }
 function takeShot(tx,ty,power){
   game.state="flight"; sfx.whoosh();
@@ -2928,6 +2937,7 @@ function takeShot(tx,ty,power){
   } else keeperTarget = useSuper?KEEPER_HOME.x:pick(zones);
   /* boss quirks: never-dive-left / stays central */
   if(!useSuper&&kp.biasLeft<0&&keeperTarget===zones[0]) keeperTarget=pick([zones[1],zones[2]]);
+  if(!useSuper&&kp.biasRight<0&&keeperTarget===zones[2]) keeperTarget=pick([zones[0],zones[1]]);
   if(!useSuper&&kp.biasCentre>0&&Math.random()<.5) keeperTarget=zones[1];
   game.flight={t:0,dur:useSuper?42:32,sx:game.ball.x,sy:game.ball.y,tx,ty,power,
                keeperTarget,useSuper,kick:true,kp};
@@ -2947,9 +2957,11 @@ function resolveKick(f){
   if(f.useSuper) return {goal:true};
   const dist=Math.abs(f.keeperTarget-f.tx);
   if(dist<f.kp.reach){
-    let prob=f.kp.prob;
-    prob-=f.power*.3;
-    prob-=Math.abs(f.tx-GOAL.centre)/(GOAL.centre-GOAL.left)*.22;
+    const cornerness=Math.abs(f.tx-GOAL.centre)/(GOAL.centre-GOAL.left);
+    let prob=f.kp.prob+(f.kp.probAdd||0);
+    /* hard shots and corners normally beat a keeper — some bosses shrug one of those off */
+    prob-=f.power*.3*(f.kp.powerProof?.25:1);
+    prob-=cornerness*.22*(f.kp.cornerProof?.2:1);
     if(Math.random()<clamp(prob,.08,.9)) return {goal:false,saved:true,why:"SAVED!",sub:"The keeper read it!"};
   }
   return {goal:true};
@@ -3514,14 +3526,37 @@ function knockoutPath(teams){
 }
 const ROUND_LABEL={r16:"Round of 16",qf:"Quarter-Final",sf:"Semi-Final",f:"Final"};
 /* boss keepers appear in the knockout rounds */
+/* Boss keepers. Each taunt hints at the way to beat them, so working out
+   the counter is part of the fun. Finals draw from the `final:true` group. */
 const BOSSES=[
-  {name:"Iron Hands Ivan",  emoji:"🧤", taunt:"I never dive left. Beat me if you can!",  guess:.06, reach:16, biasLeft:-1},
-  {name:"El Pulpo",         emoji:"🐙", taunt:"Eight arms. Nowhere to shoot!",           guess:.02, reach:30},
-  {name:"The Wall",         emoji:"🧱", taunt:"Nothing gets past the middle.",           guess:.04, reach:14, biasCentre:1},
-  {name:"Lightning Lars",   emoji:"⚡", taunt:"Too slow! I dive before you kick.",       guess:.12, reach:6},
-  {name:"Robo-Keeper 3000", emoji:"🤖", taunt:"CALCULATING YOUR SHOT... 99% SAVED.",     guess:.16, reach:10},
-  {name:"Captain Cat-Like", emoji:"🐱", taunt:"The final test. Show me what you've got!",guess:.10, reach:24}
+  {name:"Iron Hands Ivan",  emoji:"🧤", taunt:"I never dive to my left. Not once!",
+   hint:"Try shooting to the left of the goal.",          guess:.06, reach:16, biasLeft:-1},
+  {name:"Righty Rodrigo",   emoji:"🫱", taunt:"My right side? I never go that way.",
+   hint:"Try shooting to the right of the goal.",         guess:.06, reach:16, biasRight:-1},
+  {name:"El Pulpo",         emoji:"🐙", taunt:"Eight arms. Nowhere to shoot!",
+   hint:"Huge reach — pick the very corners.",            guess:.02, reach:30},
+  {name:"The Wall",         emoji:"🧱", taunt:"Nothing gets past the middle.",
+   hint:"He guards the centre — go wide.",                guess:.04, reach:14, biasCentre:1},
+  {name:"Lightning Lars",   emoji:"⚡", taunt:"Too slow! I dive before you even kick.",
+   hint:"He commits early but can't stretch far.",        guess:.12, reach:6},
+  {name:"Robo-Keeper 3000", emoji:"🤖", taunt:"CALCULATING YOUR SHOT… 99% SAVED.",
+   hint:"He reads you — a Super Shot freezes him.",       guess:.16, reach:10},
+  {name:"Sleepy Sven",      emoji:"😴", taunt:"*yawn* …oh, have we started?",
+   hint:"Slow to guess, but enormous. Corners only.",     guess:-.06, reach:34},
+  {name:"Bouncer Bruno",    emoji:"💪", taunt:"Blast it at me. Go on, I dare you.",
+   hint:"Power won't beat him — place it instead.",       guess:.04, reach:12, powerProof:1},
+  {name:"Corner Cat",       emoji:"🐈‍⬛", taunt:"The corners belong to me.",
+   hint:"Corners won't work — smash it hard and central.",guess:.02, reach:18, cornerProof:1},
+  {name:"Twitchy Tomas",    emoji:"🫨", taunt:"You'll never guess where I'm going. Nor will I!",
+   hint:"Totally random — but sticky hands if he's close.",guess:-.10, reach:22, probAdd:.08},
+  /* final-round keepers */
+  {name:"Captain Cat-Like", emoji:"🐱", taunt:"The final test. Show me what you've got!",
+   hint:"No weaknesses. Just be brilliant.",              guess:.10, reach:24, final:true},
+  {name:"The Golden Glove", emoji:"🥇", taunt:"Nobody scores past me. Nobody.",
+   hint:"The very best there is. Good luck!",             guess:.14, reach:26, probAdd:.05, final:true}
 ];
+const REG_BOSSES=BOSSES.filter(b=>!b.final);
+const FINAL_BOSSES=BOSSES.filter(b=>b.final);
 function saveCup(){ P().cupSave=cup; saveStore(); }
 function startCup(tier){
   const size=TIERS[tier].teams;
@@ -3534,7 +3569,7 @@ function startCup(tier){
     groupIdx:0,                          // which group match we're on (0..2)
     table:{},                            // teamId -> {p,w,d,l,gf,ga,pts}
     results:{}, oppQueue:null,
-    bossIdx:0, alive:true, champion:null
+    bossIdx:0, finalBossIdx:rnd(0,FINAL_BOSSES.length-1), alive:true, champion:null
   };
   /* split the field into groups of 4 — yours is first */
   cup.groups=[];
@@ -3578,7 +3613,9 @@ function simGroupRound(round){
 }
 function currentBoss(){
   if(!cup||cup.phase==="group"||cup.phase==="done") return null;
-  return cup.phase==="f" ? BOSSES[5] : BOSSES[(cup.bossIdx+cup.path.indexOf(cup.phase))%5];
+  if(cup.phase==="f") return FINAL_BOSSES[(cup.finalBossIdx||0)%FINAL_BOSSES.length];
+  /* consecutive indices, so no keeper repeats within one tournament */
+  return REG_BOSSES[((cup.bossIdx||0)+cup.path.indexOf(cup.phase))%REG_BOSSES.length];
 }
 /* everyone who qualified from the other groups, best first */
 function otherQualifiers(){
@@ -3614,7 +3651,8 @@ function cupMatchDone(won,myGoals,oppGoals){
           cup.oppQueue.push(pick(cup.teams.filter(t=>t!==my)));
         }
         cup.phase=cup.path[0];
-        cup.bossIdx=rnd(0,4);
+        cup.bossIdx=rnd(0,REG_BOSSES.length-1);
+        cup.finalBossIdx=rnd(0,FINAL_BOSSES.length-1);
       } else { cup.alive=false; cup.eliminated="group"; }
     }
     saveCup(); return;
@@ -3714,7 +3752,8 @@ function renderBracket(){
     bossBox.classList.remove("hidden");
     bossBox.innerHTML=`<span class="boss-emoji">${boss.emoji}</span>
       <div><div class="boss-name">Next up: ${boss.name}</div>
-      <div class="boss-taunt">“${boss.taunt}”</div></div>`;
+      <div class="boss-taunt">“${boss.taunt}”</div>
+      ${boss.hint?`<div class="boss-hint">💡 ${boss.hint}</div>`:""}</div>`;
   } else bossBox.classList.add("hidden");
 
   const nextBtn=$("#btn-cup-next");

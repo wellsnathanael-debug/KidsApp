@@ -27,8 +27,9 @@ Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
   unlocked by winning the one before), and the field grows as you go: 8 nations at Bronze/Silver,
   16 with a quarter-final at Golden/Platinum, and **all 32 nations with a round of 16** in the
   Legends Cup. Every cup starts with **three group matches and a league table** (draws allowed),
-  then knockouts against **boss keepers** — Iron Hands Ivan never dives left, El Pulpo has octopus
-  reach, Robo-Keeper 3000 reads your mind. **Your run is saved**, so you can stop mid-tournament
+  then knockouts against **12 named boss keepers** — Iron Hands Ivan never dives left, Bouncer Bruno
+  laughs off power shots, Corner Cat owns the corners. Each taunt hints at how to beat them, and no
+  keeper repeats within a tournament. **Your run is saved**, so you can stop mid-tournament
   and come back to it tomorrow. Winning Legends unlocks the Galaxy Ball.
 - **Skills Arena** — three quick games for five spare minutes: **Crossbar Challenge**,
   **Target Practice** and **Quickfire Maths**. Beat your personal best to win a sticker pack.
