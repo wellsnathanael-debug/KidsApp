@@ -11,6 +11,14 @@ Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
 
 ## Game modes
 
+- **Match Day** — a full football match, where **every question is a phase of play**. Answer
+  correctly and your team completes a pass and moves up the pitch; get it wrong and you're tackled.
+  Reach the final third for a real shot (swipe), and dive to keep them out when they break through.
+  Top-down pitch view, a running match clock, **live commentary**, and full-time stats for
+  possession, shots and passes. Choose a **Quick Match** (one half) or a **Full Match** (two halves
+  with half-time) at kick-off — it defaults sensibly to your skill rank.
+- **Season** — a five-match league against five clubs, with a proper table. Played as Match Day
+  fixtures, saved between sessions, and finishing top makes you champions.
 - **Shootout** — pick your nation and your opponent from **32 countries**, then it's a real
   best-of-5 penalty shootout: answer a question to earn each kick (wrong answer = blazed over!),
   swipe to shoot, then pick where to dive for the opponent's kick. Level after five?
@@ -34,7 +42,7 @@ Play it here: **https://wellsnathanael-debug.github.io/KidsApp/**
 - **Drawing Studio** — four ghost-guided tutorials (Team Badge, Football, Lion Mascot, and
   **Design Your Flag** — your finished flag flies on the match scoreboard). Each finished tutorial
   earns a ⭐ Super Shot (freezes the keeper) in every match.
-- **Trophy Cabinet & Kit Locker** — 26 achievements, cup wins per tier, 6 unlockable footballs and
+- **Trophy Cabinet & Kit Locker** — 29 achievements, cup wins per tier, 6 unlockable footballs and
   6 **goal celebrations** (knee slide, backflip, robot dance, shirt over head, heart hands).
 
 ## Coming back tomorrow
@@ -59,6 +67,17 @@ keeper a little sharper, so the game grows with the child instead of running out
 
 There are around **190 different question templates** in total. The keeper also gets sharper the
 longer your scoring streak — hat-tricks must be earned.
+
+**Targeted practice.** Every question is tagged by topic and the app tracks accuracy for each one.
+Roughly a third of questions are then drawn from the topics a child keeps getting wrong, so weak
+spots get extra practice without the game ever feeling like a drill.
+
+## For grown-ups
+
+A **👨‍👩‍👧 Grown-ups** button on the player-select screen (behind a small maths gate, to keep little
+ones out) opens a progress dashboard: for each child, their rank, questions answered, overall
+accuracy, time played, matches and cups — plus **accuracy broken down by topic**, sorted worst
+first, with their weakest and strongest areas called out. It tells you exactly what to help with.
 
 ## Running it
 

@@ -159,6 +159,8 @@ input#guest-name::placeholder{color:var(--dim);font-weight:500}
 .mode-trophy{background:linear-gradient(135deg,#3f2d04,#a16207 140%)}
 .mode-locker{background:linear-gradient(135deg,#1e3a5f,#2563eb 140%)}
 .mode-arena {background:linear-gradient(135deg,#7c2d12,#ea580c 140%)}
+.mode-match {background:linear-gradient(135deg,#14532d,#22c55e 140%)}
+.mode-season{background:linear-gradient(135deg,#4a044e,#c026d3 140%)}
 .mode-album {background:linear-gradient(135deg,#134e4a,#0d9488 140%)}
 .row-label{font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.06em;
   font-size:.85rem;color:var(--dim);margin:20px 0 9px}
@@ -282,6 +284,15 @@ canvas#gameCanvas{display:block;width:100%;height:auto;touch-action:none}
 .super-toggle.on{outline:3px solid #fff;animation:glow 1s infinite}
 @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.7)}50%{box-shadow:0 0 26px 8px rgba(251,191,36,.65)}}
 .game-under{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap}
+/* live commentary strip */
+.commentary-wrap{display:flex;align-items:center;gap:10px;margin-top:10px;
+  background:linear-gradient(90deg,rgba(56,189,248,.14),rgba(255,255,255,.04));
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;
+  font-size:clamp(.88rem,2.5vw,1.02rem);min-height:44px}
+.comm-mic{font-size:1.2rem}
+#commentary{animation:commIn .3s ease}
+@keyframes commIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.who-chip small{font-weight:600;opacity:.7;margin-left:4px}
 
 /* ---------- quiz ---------- */
 .modal-backdrop{position:fixed;inset:0;background:rgba(4,10,20,.7);backdrop-filter:blur(6px);
@@ -429,7 +440,28 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
 .reward-card h2{font-size:1.6rem;margin:10px 0 4px;font-weight:900;font-style:italic;text-transform:uppercase}
 .reward-card p{color:var(--dim);font-weight:600;margin-bottom:18px;font-size:.92rem}
 
+/* ---------- parent dashboard ---------- */
+.parent-card{margin-bottom:16px}
+.pc-head{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+.pc-avatar{font-size:2.3rem}
+.pc-name{font-weight:900;font-style:italic;text-transform:uppercase;font-size:1.15rem}
+.pc-rank{font-size:.78rem;font-style:normal;margin-left:6px}
+.pc-sub{font-size:.78rem;color:var(--dim);font-weight:600;margin-top:2px}
+.pc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:9px;margin-bottom:14px}
+.pc-stats div{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px 6px;text-align:center}
+.pc-stats b{display:block;font-size:1.15rem;font-weight:900}
+.pc-stats span{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.pc-callouts{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:11px;font-size:.82rem;font-weight:700}
+.pc-weak{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:#fca5a5;border-radius:999px;padding:5px 13px}
+.pc-strong{background:rgba(61,220,127,.12);border:1px solid rgba(61,220,127,.35);color:#86efac;border-radius:999px;padding:5px 13px}
+.pc-topic{display:grid;grid-template-columns:minmax(110px,215px) 1fr 46px 50px;align-items:center;gap:11px;padding:5px 0;font-size:.84rem;font-weight:700}
+.pt-bar{background:rgba(255,255,255,.09);border-radius:999px;height:8px;overflow:hidden}
+.pt-fill{display:block;height:100%;border-radius:999px}
+.pt-pct{text-align:right;font-weight:900}
+.pt-n{text-align:right;color:var(--dim);font-size:.74rem}
 @media (max-width:560px){
+  .pc-topic{grid-template-columns:minmax(90px,1fr) 60px 40px}
+  .pt-n{display:none}
   .answers{grid-template-columns:1fr}
   .defend-btns .btn{padding:10px 8px;font-size:.88rem}
 }
@@ -463,7 +495,31 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
     </button>
     <button class="profile-card pguest" id="guest-card" data-age="guest"></button>
   </div>
+  <div style="text-align:center;margin-top:24px">
+    <button class="icon-btn" id="btn-grownups">👨‍👩‍👧 Grown-ups</button>
+  </div>
   <footer class="note">Works offline on iPad &amp; MacBook — finger, stylus, mouse or keyboard.</footer>
+</div>
+
+<!-- ================= GROWN-UPS GATE ================= -->
+<div id="gate-modal" class="modal-backdrop hidden">
+  <div class="quiz-card" style="max-width:440px">
+    <span class="quiz-tag">🔐 Grown-ups only</span>
+    <div class="q-text" id="gate-q">What is 13 × 14?</div>
+    <div class="answers" id="gate-answers"></div>
+    <button class="btn" id="btn-gate-cancel" style="margin-top:14px">Back to the game</button>
+  </div>
+</div>
+
+<!-- ================= PARENT DASHBOARD ================= -->
+<div id="screen-parent" class="screen hidden">
+  <div class="top-bar">
+    <button class="icon-btn" data-back="profile">⬅️ Back</button>
+    <h1 class="logo display">📈 Progress</h1>
+    <span></span>
+  </div>
+  <p class="tagline">How each child is getting on — accuracy by topic shows exactly where to help.</p>
+  <div id="parent-body"></div>
 </div>
 
 <!-- ================= VISITOR SETUP ================= -->
@@ -512,10 +568,20 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
       <h3>Shootout</h3>
       <p>Pick from 32 nations and settle it from the spot.</p>
     </button>
+    <button class="mode-card mode-match" id="btn-matchday">
+      <span class="big-emoji">🏟️</span>
+      <h3>Match Day</h3>
+      <p>A full football match — pass, build up and score!</p>
+    </button>
     <button class="mode-card mode-cup" id="btn-cup">
       <span class="big-emoji">🏆</span>
       <h3>World Cup</h3>
       <p>Groups, knockouts and boss keepers — lift the trophy!</p>
+    </button>
+    <button class="mode-card mode-season" id="btn-season">
+      <span class="big-emoji">🗓️</span>
+      <h3>Season</h3>
+      <p>Five league matches — top the table to win the title.</p>
     </button>
     <button class="mode-card mode-arena" id="btn-arena">
       <span class="big-emoji">🎯</span>
@@ -567,6 +633,13 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
       <p class="pick-label">Opponent</p>
       <div class="team-scroll" id="grid-opp"></div>
     </div>
+    <div id="length-block" class="hidden">
+      <p class="pick-label">Match length</p>
+      <div class="who-row" id="length-row">
+        <button class="who-chip" data-len="quick">⏱️ Quick Match <small>(one half)</small></button>
+        <button class="who-chip" data-len="full">🏟️ Full Match <small>(two halves)</small></button>
+      </div>
+    </div>
   </div>
   <div class="kickoff-bar"><button class="btn primary" id="btn-kickoff">⚽ Kick Off</button></div>
 </div>
@@ -607,6 +680,29 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
   <p class="tagline" style="margin-top:18px">Three group matches, then a semi-final and the final — against the world's trickiest goalkeepers. Your progress is saved, so you can finish it later!</p>
 </div>
 
+<!-- ================= SEASON HOME ================= -->
+<div id="screen-season-home" class="screen hidden">
+  <div class="top-bar">
+    <button class="icon-btn" data-back="hub">⬅️ Back</button>
+    <h1 class="logo display">🗓️ Season</h1>
+    <span></span>
+  </div>
+  <div id="season-resume" class="hidden"></div>
+  <p class="tagline" id="season-intro"></p>
+  <div class="kickoff-bar"><button class="btn primary" id="btn-season-new">🗓️ Start a New Season</button></div>
+</div>
+
+<!-- ================= SEASON TABLE ================= -->
+<div id="screen-season" class="screen hidden">
+  <div class="top-bar">
+    <button class="icon-btn" id="btn-season-quit">🚪 Save &amp; Leave</button>
+    <h1 class="logo display">🗓️ League Table</h1>
+    <span></span>
+  </div>
+  <div class="card" id="season-body"></div>
+  <div class="kickoff-bar"><button class="btn primary" id="btn-season-next">▶ Play Next Match</button></div>
+</div>
+
 <!-- ================= WORLD CUP BRACKET ================= -->
 <div id="screen-bracket" class="screen hidden">
   <div class="top-bar">
@@ -636,6 +732,9 @@ input[type=range]{accent-color:var(--cyan);width:110px;height:30px}
       <button class="btn" data-zone="1">🧍 Stay</button>
       <button class="btn" data-zone="2">Dive Right ➡️</button>
     </div>
+  </div>
+  <div class="commentary-wrap hidden" id="commentary-wrap">
+    <span class="comm-mic">🎙️</span><span id="commentary">Kick-off!</span>
   </div>
   <div class="game-under">
     <div class="stat-chip" id="tokens-left">⭐ Super Shots: 0</div>
@@ -868,7 +967,11 @@ function blankProfile(){
            daily:{date:"",progress:0,done:false,streak:0,lastDate:""},
            miniBest:{crossbar:0,targets:0,quickfire:0},
            /* depth update */
-           shiny:{}, rankSeen:0 };
+           shiny:{}, rankSeen:0,
+           /* match day update */
+           topicStats:{}, playMs:0, lastPlayed:"",
+           seasonSave:null, seasonsWon:0,
+           matchStats:{played:0,won:0,drawn:0,lost:0,goalsFor:0,goalsAgainst:0} };
 }
 function loadStore(){
   let s=null;
@@ -878,7 +981,8 @@ function loadStore(){
   const norm=(saved,extra)=>{
     const p=Object.assign(blankProfile(),extra||{},saved||{});
     const d=blankProfile();
-    ["daily","cupTiers","miniBest"].forEach(k=>{ p[k]=Object.assign(d[k], p[k]||{}); });
+    ["daily","cupTiers","miniBest","matchStats"].forEach(k=>{ p[k]=Object.assign(d[k], p[k]||{}); });
+    if(!p.topicStats||typeof p.topicStats!=="object") p.topicStats={};
     if(!p.stickers||typeof p.stickers!=="object") p.stickers={};
     if(!p.shiny||typeof p.shiny!=="object") p.shiny={};
     if(!Array.isArray(p.unlockedCelebrations)||!p.unlockedCelebrations.length) p.unlockedCelebrations=["raise"];
@@ -1086,65 +1190,60 @@ const AGE6_FACTS=[
   {q:"Which one is the biggest?",a:"🐘",w:["🐭","🐈","🐿️"]},
   {q:"How many months are there in a year?",a:"12",w:["10","7","20"]}
 ];
-function genAge6(b){
-  b=b||0;
-  const kinds=["add","add","sub","count","word","fact"];
-  if(b>=1) kinds.push("bonds","double","shape","seq");
-  if(b>=2) kinds.push("times","missing","clock","money");
-  if(b>=3) kinds.push("big","triple","half");
-  const kind=pick(kinds);
-  if(kind==="add"){
+/* Age 6 question registry — keyed by topic so questions can be tagged and targeted */
+const Q6={
+  add:(b)=>{
     const max=b>=3?30:20;
     const a=rnd(1,Math.floor(max/2)); const c=rnd(1,Math.max(1,max-1-a));
     return {text:`What is ${a} + ${c}?`,options:numOptions(a+c,3)};
-  }
-  if(kind==="sub"){
+  },
+  sub:(b)=>{
     const a=rnd(4,b>=3?30:19),c=rnd(1,a-1);
     return {text:`What is ${a} − ${c}?`,options:numOptions(a-c,3)};
-  }
-  if(kind==="count"){
+  },
+  count:(b)=>{
     const n=rnd(3,b>=1?12:9),e=pick(COUNT_EMOJI);
     return {text:"Count them! How many can you see?",emoji:e.repeat(n),options:numOptions(n,2)};
-  }
-  if(kind==="word"){
+  },
+  word:()=>{
     const w=pick(WORD_PICTURES);
     const others=shuffle(WORD_PICTURES.filter(x=>x.word!==w.word)).slice(0,3);
     return {text:`Which picture shows the word “${w.word}”?`,
       options:shuffle([{label:w.e,correct:true}].concat(others.map(o=>({label:o.e,correct:false}))))};
-  }
-  if(kind==="fact") return bankQuestion(pick(AGE6_FACTS));
-  if(kind==="bonds"){
+  },
+  fact:()=>bankQuestion(pick(AGE6_FACTS)),
+  bonds:()=>{
     const total=pick([10,20]); const a=rnd(1,total-1);
     return {text:`${a} + ? = ${total}. What is the missing number?`,options:numOptions(total-a,3)};
-  }
-  if(kind==="double"){
+  },
+  double:(b)=>{
     const a=rnd(2,b>=3?15:10);
     return {text:`What is double ${a}?`,options:numOptions(a*2,3)};
-  }
-  if(kind==="half"){
+  },
+  half:()=>{
     const a=rnd(2,12)*2;
     return {text:`What is half of ${a}?`,options:numOptions(a/2,3)};
-  }
-  if(kind==="shape"){
+  },
+  shape:()=>{
     const s=pick(SHAPES);
     const others=shuffle(SHAPES.filter(x=>x.name!==s.name)).slice(0,3);
     return {text:`Which one is the ${s.name}?`,
       options:shuffle([{label:s.e,correct:true}].concat(others.map(o=>({label:o.e,correct:false}))))};
-  }
-  if(kind==="seq"){
+  },
+  seq:()=>{
     const step=pick([1,2,2,5,10]); const start=rnd(1,6)*step;
     const seq=[start,start+step,start+step*2];
     return {text:`What comes next?  ${seq.join(", ")}, ?`,options:numOptions(start+step*3,step+2)};
-  }
-  if(kind==="times"){
+  },
+  times:()=>{
     const t=pick([2,5,10]),n=rnd(1,10);
     return {text:`What is ${n} × ${t}?`,options:numOptions(n*t,Math.max(3,t))};
-  }
-  if(kind==="missing"){
+  },
+  missing:()=>{
     const a=rnd(2,9),c=rnd(2,9);
     return {text:`${a} + ? = ${a+c}. What is the missing number?`,options:numOptions(c,3)};
-  }
-  if(kind==="clock"){
+  },
+  clock:(b)=>{
     const h=rnd(1,12);
     if(b>=3&&Math.random()<.5){
       const half=Math.random()<.5;
@@ -1161,20 +1260,27 @@ function genAge6(b){
         {label:`${h===12?1:h+1} o'clock`,correct:false},
         {label:`Half past ${h}`,correct:false},
         {label:`${h===1?12:h-1} o'clock`,correct:false}])};
-  }
-  if(kind==="money"){
+  },
+  money:()=>{
     const coins=pick([[10,10],[20,5],[50,20],[10,5],[20,20]]);
     return {text:`You have a ${coins[0]}p coin and a ${coins[1]}p coin. How many pence altogether?`,
       options:numOptions(coins[0]+coins[1],8)};
-  }
-  if(kind==="big"){
+  },
+  big:()=>{
     const a=rnd(10,40),c=rnd(2,9);
     return {text:`What is ${a} + ${c}?`,options:numOptions(a+c,4)};
+  },
+  triple:()=>{
+    const a=rnd(1,7),c=rnd(1,7),d=rnd(1,6);
+    return {text:`What is ${a} + ${c} + ${d}?`,options:numOptions(a+c+d,3)};
   }
-  /* triple */
-  const a=rnd(1,7),c=rnd(1,7),d=rnd(1,6);
-  return {text:`What is ${a} + ${c} + ${d}?`,options:numOptions(a+c+d,3)};
-}
+};
+const BANDS6=[
+  ["add","add","sub","count","word","fact"],
+  ["bonds","double","shape","seq"],
+  ["times","missing","clock","money"],
+  ["big","triple","half"]
+];
 const GEO_SCI_10=[
   {q:"What is the capital city of Scotland?",a:"Edinburgh",w:["Glasgow","Cardiff","Aberdeen"]},
   {q:"What is the capital city of Wales?",a:"Cardiff",w:["Swansea","Belfast","Newport"]},
@@ -1215,18 +1321,13 @@ const GEO_SCI_10=[
   {q:"Which force slows a ball rolling on grass?",a:"Friction",w:["Gravity","Magnetism","Upthrust"]},
   {q:"What is the main gas in the air we breathe?",a:"Nitrogen",w:["Oxygen","Carbon dioxide","Hydrogen"]}
 ];
-function genAge10(b){
-  b=b||0;
-  const kinds=["times","times","fraction","word","bank","bank"];
-  if(b>=1) kinds.push("divide","decimal","perimeter","compare");
-  if(b>=2) kinds.push("area","twostep","round","negtemp");
-  if(b>=3) kinds.push("bigmult","equiv","mean");
-  const kind=pick(kinds);
-  if(kind==="divide"){
+/* Age 10 question registry */
+const Q10={
+  divide:()=>{
     const d=rnd(2,12),ans=rnd(2,12);
     return {text:`What is ${d*ans} ÷ ${d}?`,options:numOptions(ans,3)};
-  }
-  if(kind==="decimal"){
+  },
+  decimal:()=>{
     const a=rnd(1,9),c=rnd(1,9),sum=a+c;
     const val=(sum/10).toFixed(1);
     /* near-miss distractors, never zero or duplicated */
@@ -1234,43 +1335,43 @@ function genAge10(b){
     const labels=[val].concat(shuffle(cand).slice(0,3).map(v=>(v/10).toFixed(1)));
     return {text:`What is 0.${a} + 0.${c}?`,
       options:shuffle(labels.map(v=>({label:v,correct:v===val})))};
-  }
-  if(kind==="perimeter"){
+  },
+  perimeter:()=>{
     const w=rnd(3,12),h=rnd(3,12);
     return {text:`A rectangle is ${w}cm by ${h}cm. What is its perimeter, in centimetres?`,
       options:numOptions(2*(w+h),5)};
-  }
-  if(kind==="area"){
+  },
+  area:()=>{
     const w=rnd(3,12),h=rnd(3,12);
     return {text:`A rectangle is ${w}cm by ${h}cm. What is its area, in square centimetres?`,
       options:numOptions(w*h,Math.max(5,w))};
-  }
-  if(kind==="compare"){
+  },
+  compare:()=>{
     const opts=[{l:"1/2",v:.5},{l:"1/3",v:1/3},{l:"1/4",v:.25},{l:"3/4",v:.75},{l:"2/3",v:2/3},{l:"1/5",v:.2}];
     const four=shuffle(opts).slice(0,4);
     const biggest=four.reduce((m,x)=>x.v>m.v?x:m,four[0]);
     return {text:"Which fraction is the biggest?",
       options:shuffle(four.map(o=>({label:o.l,correct:o===biggest})))};
-  }
-  if(kind==="round"){
+  },
+  round:()=>{
     const n=rnd(120,980);
     return {text:`What is ${n} rounded to the nearest 100?`,options:numOptions(Math.round(n/100)*100,150)};
-  }
-  if(kind==="negtemp"){
+  },
+  negtemp:()=>{
     const start=-rnd(1,9),rise=rnd(2,14);
     return {text:`The temperature is ${start}°C and rises by ${rise}°C. What is it now?`,
       options:numOptions(start+rise,4)};
-  }
-  if(kind==="twostep"){
+  },
+  twostep:()=>{
     const n=pick(NPOOL()),packs=rnd(3,6),each=rnd(3,8),eaten=rnd(2,6);
     return {text:`${n} buys ${packs} packs of ${each} stickers, then gives away ${eaten}. How many are left?`,
       options:numOptions(packs*each-eaten,5)};
-  }
-  if(kind==="bigmult"){
+  },
+  bigmult:()=>{
     const a=rnd(12,29),c=rnd(3,9);
     return {text:`What is ${a} × ${c}?`,options:numOptions(a*c,Math.max(8,a))};
-  }
-  if(kind==="equiv"){
+  },
+  equiv:()=>{
     const base=pick([[1,2],[1,3],[2,3],[3,4],[1,5]]);
     const m=rnd(2,5);
     return {text:`Which fraction is the same as ${base[0]}/${base[1]}?`,
@@ -1279,24 +1380,24 @@ function genAge10(b){
         {label:`${base[0]*m}/${base[1]*m+1}`,correct:false},
         {label:`${base[0]+m}/${base[1]+m}`,correct:false},
         {label:`${base[0]*m+1}/${base[1]*m}`,correct:false}])};
-  }
-  if(kind==="mean"){
+  },
+  mean:()=>{
     const n=[rnd(2,10),rnd(2,10),rnd(2,10)];
     const total=n.reduce((a,c)=>a+c,0);
     const adj=total%3===0?n:[n[0],n[1],n[2]+(3-total%3)];
     const t=adj.reduce((a,c)=>a+c,0);
     return {text:`What is the mean (average) of ${adj.join(", ")}?`,options:numOptions(t/3,3)};
-  }
-  if(kind==="times"){
+  },
+  times:()=>{
     const a=rnd(2,12),c=rnd(2,12);
     return {text:`What is ${a} × ${c}?`,options:numOptions(a*c,Math.max(4,a))};
-  }
-  if(kind==="fraction"){
+  },
+  fraction:()=>{
     const f=pick([{n:"half",d:2},{n:"quarter",d:4},{n:"third",d:3},{n:"fifth",d:5}]);
     const ans=rnd(2,12);
     return {text:`What is one ${f.n} of ${ans*f.d}?`,options:numOptions(ans,3)};
-  }
-  if(kind==="word"){
+  },
+  word:()=>{
     const pool=NPOOL();
     const t=pick([
       ()=>{const n=pick(pool),g=rnd(2,5),m=rnd(3,6);return{q:`${n} scores ${g} goals in each of ${m} matches. How many goals is that in total?`,ans:g*m};},
@@ -1307,9 +1408,15 @@ function genAge10(b){
       ()=>{const a=pick(pool),g1=rnd(2,9),g2=rnd(2,9);const b=pick(pool.filter(x=>x!==a));return{q:`${a} scores ${g1} goals and ${b} scores ${g2}. How many goals did they score together?`,ans:g1+g2};}
     ])();
     return {text:t.q,options:numOptions(t.ans,5)};
-  }
-  return bankQuestion(pick(GEO_SCI_10));
-}
+  },
+  geo:()=>bankQuestion(pick(GEO_SCI_10))
+};
+const BANDS10=[
+  ["times","times","fraction","word","geo","geo"],
+  ["divide","decimal","perimeter","compare"],
+  ["area","twostep","round","negtemp"],
+  ["bigmult","equiv","mean"]
+];
 const GK_12=[
   {q:"Who wrote the play “Romeo and Juliet”?",a:"William Shakespeare",w:["Charles Dickens","Roald Dahl","J.K. Rowling"]},
   {q:"What is the largest planet in our solar system?",a:"Jupiter",w:["Saturn","Earth","Neptune"]},
@@ -1350,18 +1457,13 @@ const GK_12=[
   {q:"What is a group of lions called?",a:"A pride",w:["A pack","A herd","A flock"]},
   {q:"Which planet has the Great Red Spot?",a:"Jupiter",w:["Mars","Saturn","Neptune"]}
 ];
-function genAge12(b){
-  b=b||0;
-  const kinds=["bodmas","algebra","percent","bank"];
-  if(b>=1) kinds.push("square","ratio","negative");
-  if(b>=2) kinds.push("brackets","pctchange","primes","hcflcm");
-  if(b>=3) kinds.push("indices","probability","twostepalg");
-  const kind=pick(kinds);
-  if(kind==="square"){
+/* Age 12 question registry */
+const Q12={
+  square:()=>{
     if(Math.random()<.5){ const n=rnd(4,15); return {text:`What is ${n}²?`,options:numOptions(n*n,Math.max(6,n))}; }
     const n=rnd(2,7); return {text:`What is ${n}³?`,options:numOptions(n*n*n,Math.max(8,n*3))};
-  }
-  if(kind==="ratio"){
+  },
+  ratio:()=>{
     const m=rnd(2,7),a=rnd(2,6),c=rnd(2,6);
     return {text:`Simplify the ratio ${a*m} : ${c*m}`,
       options:shuffle([
@@ -1369,43 +1471,43 @@ function genAge12(b){
         {label:`${a+1} : ${c}`,correct:false},
         {label:`${a} : ${c+1}`,correct:false},
         {label:`${a*2} : ${c}`,correct:false}])};
-  }
-  if(kind==="negative"){
+  },
+  negative:()=>{
     const a=-rnd(2,15),c=rnd(2,15);
     return Math.random()<.5
       ? {text:`What is ${a} + ${c}?`,options:numOptions(a+c,5)}
       : {text:`What is ${a} − ${c}?`,options:numOptions(a-c,5)};
-  }
-  if(kind==="brackets"){
+  },
+  brackets:()=>{
     const a=rnd(2,9),c=rnd(2,9),d=rnd(2,6),e=rnd(2,6);
     return {text:`Work it out:  ${d} × (${a} + ${c}) − ${e} = ?`,options:numOptions(d*(a+c)-e,7)};
-  }
-  if(kind==="pctchange"){
+  },
+  pctchange:()=>{
     const base=pick([40,60,80,120,200,150]),p=pick([10,20,25,50]);
     const up=Math.random()<.5;
     const ans=up?base+base*p/100:base-base*p/100;
     return {text:`A price of £${base} ${up?"rises":"falls"} by ${p}%. What is the new price, in pounds?`,
       options:numOptions(ans,Math.max(6,Math.round(base/8)))};
-  }
-  if(kind==="primes"){
+  },
+  primes:()=>{
     const primes=[2,3,5,7,11,13,17,19,23,29,31,37];
     const p=pick(primes);
     const notPrime=shuffle([4,6,8,9,10,12,14,15,16,18,20,21,22,25,27].filter(n=>n!==p)).slice(0,3);
     return {text:"Which of these is a prime number?",
       options:shuffle([{label:String(p),correct:true}].concat(notPrime.map(n=>({label:String(n),correct:false}))))};
-  }
-  if(kind==="hcflcm"){
+  },
+  hcflcm:()=>{
     const a=rnd(4,16);
     let c=rnd(4,16); while(c===a) c=rnd(4,16);   // same number twice is a non-question
     const gcd=(x,y)=>y?gcd(y,x%y):x;
     if(Math.random()<.5) return {text:`What is the highest common factor (HCF) of ${a} and ${c}?`,options:numOptions(gcd(a,c),3)};
     return {text:`What is the lowest common multiple (LCM) of ${a} and ${c}?`,options:numOptions(a*c/gcd(a,c),Math.max(6,a))};
-  }
-  if(kind==="indices"){
+  },
+  indices:()=>{
     const n=rnd(2,5),x=rnd(2,4),y=rnd(2,3);
     return {text:`Simplify:  ${n}^${x} × ${n}^${y} = ${n}^?`,options:numOptions(x+y,2)};
-  }
-  if(kind==="probability"){
+  },
+  probability:()=>{
     const total=pick([10,12,20]);
     const gcd=(p,q)=>q?gcd(q,p%q):p;
     /* only use counts that actually simplify, so the unsimplified form is a real distractor */
@@ -1421,14 +1523,14 @@ function genAge12(b){
         {label:`${want/g+1}/${total/g}`,correct:false},
         {label:`${want/g}/${total/g+1}`,correct:false}]
         .filter((o,i,arr)=>arr.findIndex(x=>x.label===o.label)===i))};
-  }
-  if(kind==="twostepalg"){
+  },
+  twostepalg:()=>{
     const x=rnd(2,10),a=rnd(2,7),d=rnd(2,5);
     /* choose c so the division comes out whole */
     let c=(d-((a*x)%d))%d; if(c===0) c=d;
     return {text:`Solve for x:  (${a}x + ${c}) ÷ ${d} = ${(a*x+c)/d}`,options:numOptions(x,3)};
-  }
-  if(kind==="bodmas"){
+  },
+  bodmas:()=>{
     const t=pick([
       ()=>{const a=rnd(2,9),b=rnd(2,9),c=rnd(2,9);return{q:`${a} + ${b} × ${c}`,ans:a+b*c};},
       ()=>{const a=rnd(2,6),b=rnd(2,6),c=rnd(2,9);return{q:`(${a} + ${b}) × ${c}`,ans:(a+b)*c};},
@@ -1436,22 +1538,53 @@ function genAge12(b){
       ()=>{const b=rnd(2,6),c=rnd(2,5),a=b*c*rnd(1,3);return{q:`${a} ÷ ${b} + ${c}`,ans:a/b+c};}
     ])();
     return {text:`Work it out (remember BODMAS!):  ${t.q} = ?`,options:numOptions(t.ans,6)};
-  }
-  if(kind==="algebra"){
+  },
+  algebra:()=>{
     const x=rnd(2,12),a=rnd(2,9),b=rnd(1,20);
     return {text:`Solve for x:  ${a}x + ${b} = ${a*x+b}`,options:numOptions(x,3)};
-  }
-  if(kind==="percent"){
+  },
+  percent:()=>{
     const p=pick([10,20,25,50,75]),base=pick([20,40,60,80,120,160,200]);
     const ans=base*p/100;
     return {text:`What is ${p}% of ${base}?`,options:numOptions(ans,Math.max(5,Math.round(ans/4)))};
-  }
-  return bankQuestion(pick(GK_12));
+  },
+  gk:()=>bankQuestion(pick(GK_12))
+};
+const BANDS12=[
+  ["bodmas","algebra","percent","gk"],
+  ["square","ratio","negative"],
+  ["brackets","pctchange","primes","hcflcm"],
+  ["indices","probability","twostepalg"]
+];
+
+/* ---- topic-aware question selection ---- */
+const REGISTRY={6:{q:Q6,bands:BANDS6},10:{q:Q10,bands:BANDS10},12:{q:Q12,bands:BANDS12}};
+function topicsFor(level,b){
+  const reg=REGISTRY[level]||REGISTRY[10];
+  let out=[];
+  for(let i=0;i<=Math.min(b||0,3);i++) out=out.concat(reg.bands[i]);
+  return out;
 }
-function genQuestion(level,b){
-  if(level===6) return genAge6(b);
-  if(level===10) return genAge10(b);
-  return genAge12(b);
+/* pick a topic the player keeps getting wrong, if there is one worth practising */
+function weakTopic(level,b,profile){
+  const p=profile||P();
+  const stats=p.topicStats||{};
+  const avail=[...new Set(topicsFor(level,b))];
+  const weak=avail.filter(t=>{
+    const s=stats[t];
+    return s && s.seen>=4 && (s.right/s.seen)<0.7;
+  });
+  return weak.length?pick(weak):null;
+}
+function genQuestion(level,b,forceTopic){
+  const reg=REGISTRY[level]||REGISTRY[10];
+  const avail=topicsFor(level,b);
+  let topic = forceTopic && reg.q[forceTopic] && avail.includes(forceTopic) ? forceTopic : null;
+  if(!topic && Math.random()<0.35){ topic=weakTopic(level,b); }   // quietly target weak spots
+  if(!topic) topic=pick(avail);
+  const q=reg.q[topic](Math.min(b||0,3));
+  q.topic=topic;
+  return q;
 }
 
 /* ============================================================
@@ -1481,10 +1614,19 @@ function askQuestion(forKey,forName){
     const finish=(ok)=>{
       if(done) return; done=true;
       if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
+      /* per-topic accuracy powers the weak-topic targeting and the parent dashboard */
+      const prof=PROF(qKey);
+      if(q.topic){
+        if(!prof.topicStats) prof.topicStats={};
+        const st=prof.topicStats[q.topic]||(prof.topicStats[q.topic]={seen:0,right:0});
+        st.seen++; if(ok) st.right++;
+      }
+      prof.lastPlayed=todayKey();
       if(ok){
-        PROF(qKey).correct++; saveStore();
+        prof.correct++;
         if(qKey===profileKey){ dailyProgress("correct"); checkRankUp(); }
       }
+      saveStore();
       quizFeedback.textContent = ok ? pick([`Brilliant, ${kid}! 🎉`,"Spot on! ⭐",`Superb, ${kid}! 🙌`,"Nice one! ✨"])
                                     : `Good try, ${kid}! The green answer was right.`;
       quizFeedback.style.color = ok ? "var(--green)" : "var(--red)";
@@ -1933,7 +2075,10 @@ const ACHIEVEMENTS=[
   {id:"shiny1",    ico:"✨", name:"Ooh, Shiny!",    desc:"Find your first shiny sticker"},
   {id:"shiny10",   ico:"💫", name:"Shiny Hunter",   desc:"Find 10 shiny stickers"},
   {id:"allShiny",  ico:"🪐", name:"Shiny Master",   desc:"Find every sticker in shiny"},
-  {id:"legendCup", ico:"👑", name:"Legends Winner", desc:"Win the Legends Cup"}
+  {id:"legendCup", ico:"👑", name:"Legends Winner", desc:"Win the Legends Cup"},
+  {id:"champions", ico:"🗓️", name:"League Champions",desc:"Finish top of the table in a season"},
+  {id:"playmaker", ico:"🎯", name:"Playmaker",      desc:"Complete 25 passes in one match"},
+  {id:"cleanSheet",ico:"🛡️", name:"Clean Sheet",    desc:"Win a match without conceding"}
 ];
 function award(id,profile){
   const p=profile||P();
@@ -2031,15 +2176,155 @@ const game={
   state:"idle", ball:{x:BALL_START.x,y:BALL_START.y,r:30,rot:0},
   keeper:{x:KEEPER_HOME.x,y:KEEPER_HOME.y,lean:0,kit:TEAMS.brazil,reachPose:0},
   aim:null, flight:null, particles:[], ripple:null,
-  crowdTimer:0, idleT:0
+  crowdTimer:0, idleT:0,
+  view:"goal"              // "goal" = close-up goalmouth, "pitch" = Match Day top-down
 };
 let flagImgCache=null, flagImgData=null;
 
 function side(k){ return k==="A"?game.A:game.B; }
 function otherSide(k){ return k==="A"?game.B:game.A; }
 
+/* ============================================================
+   MATCH DAY — top-down pitch view
+   Zone ladder: 0 = your goal … 6 = their goal, ball starts at 3.
+   ============================================================ */
+const ZONES=7;
+const PITCH={x:70,y:136,w:760,h:404};
+const md={
+  active:false, zone:3, poss:"us", phase:0, phases:13,
+  clock:0, minsPerPhase:4, half:1, halves:1,
+  us:0, them:0, shots:0, shotsAgainst:0, passes:0, possWon:0, phasesWithBall:0,
+  commentary:"", commentaryT:0, ballAnim:null, pendingAfterShot:null
+};
+const COMMENTARY={
+  pass:["{me} plays it forward — lovely ball!","Neat pass from {me}.","{me} slips it through the lines!",
+        "Great control, {me} drives on.","One-two — and {me} is away!"],
+  surge:["Brilliant through ball! Two zones at once!","What a pass — that's split them wide open!",
+         "{me} launches it upfield — superb!"],
+  lost:["Tackled! {them} win it back.","Intercepted by {them}.","Sloppy — {them} pinch possession.",
+        "{them} nick the ball away."],
+  won:["Great tackle by {me}!","{me} wins it back — brilliant defending!","Intercepted! {me} have it."],
+  theyAdvance:["{them} push forward.","{them} work it up the pitch.","{them} are building an attack…",
+               "Dangerous — {them} advance."],
+  finalThird:["Into the final third — shooting chance!","{me} are in! Time to shoot!","This is a big chance!"],
+  danger:["{them} are through on goal — get ready to dive!","Danger! {them} shoot!"],
+  goal:["GOAL!!! What a finish by {me}!","IT'S IN! {me} score!","GOAL! The crowd goes wild!"],
+  conceded:["{them} score. Heads up — plenty of time.","Goal for {them}. Back to the halfway line."],
+  saved:["Saved! Great keeping.","Denied! What a save."],
+  kickoff:["Kick-off! Here we go.","We're under way at the stadium!"]
+};
+function say(kind){
+  const t=pick(COMMENTARY[kind]||["…"])
+    .replace(/\{me\}/g,game.A?game.A.team.name:"You")
+    .replace(/\{them\}/g,game.B?game.B.team.name:"They");
+  md.commentary=t; md.commentaryT=performance.now();
+  const el=$("#commentary"); if(el) el.textContent=t;
+}
+function mdClockText(){
+  const m=Math.min(md.clock,md.halves*45);
+  return `${String(m).padStart(2,"0")}'`;
+}
+function drawPitchView(){
+  ctx.clearRect(0,0,W,H);
+  game.idleT++;
+  /* night sky + crowd band behind the pitch */
+  const sky=ctx.createLinearGradient(0,0,0,110);
+  sky.addColorStop(0,"#060d1a"); sky.addColorStop(1,"#12263f");
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,110);
+  ctx.drawImage(crowdIdle,0,0,W*2,300,0,10,W,80);
+  ctx.fillStyle="rgba(6,13,26,.45)"; ctx.fillRect(0,10,W,80);
+
+  /* pitch */
+  const {x,y,w,h}=PITCH;
+  const g=ctx.createLinearGradient(0,y,0,y+h);
+  g.addColorStop(0,"#2f8f49"); g.addColorStop(1,"#1f6634");
+  ctx.fillStyle=g; ctx.fillRect(x,y,w,h);
+  /* mown stripes down the length */
+  ctx.fillStyle="rgba(255,255,255,.05)";
+  for(let i=0;i<ZONES;i+=2) ctx.fillRect(x+w*i/ZONES,y,w/ZONES,h);
+  /* markings */
+  ctx.strokeStyle="rgba(255,255,255,.75)"; ctx.lineWidth=3;
+  ctx.strokeRect(x,y,w,h);
+  ctx.beginPath(); ctx.moveTo(x+w/2,y); ctx.lineTo(x+w/2,y+h); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x+w/2,y+h/2,52,0,Math.PI*2); ctx.stroke();
+  [[x,1],[x+w,-1]].forEach(([bx,dir])=>{
+    ctx.strokeRect(dir>0?bx:bx-96,y+h/2-88,96,176);       // penalty box
+    ctx.strokeRect(dir>0?bx:bx-38,y+h/2-40,38,80);        // six-yard box
+  });
+  /* goals with the two teams' colours */
+  [[x-14,game.A],[x+w,game.B]].forEach(([gx,sideObj])=>{
+    ctx.fillStyle=sideObj?sideObj.team.shirt:"#f1f5f9";
+    ctx.fillRect(gx,y+h/2-38,14,76);
+    ctx.strokeStyle="#ffffff"; ctx.lineWidth=2; ctx.strokeRect(gx,y+h/2-38,14,76);
+  });
+
+  /* zone ladder markers */
+  for(let i=0;i<ZONES;i++){
+    const cx=x+w*(i+.5)/ZONES;
+    ctx.beginPath(); ctx.arc(cx,y+h-16,4,0,Math.PI*2);
+    ctx.fillStyle=i===md.zone?"#fbbf24":"rgba(255,255,255,.28)"; ctx.fill();
+  }
+
+  /* team flags at each end */
+  ctx.font="26px -apple-system,Segoe UI,sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  if(game.A) ctx.fillText(game.A.team.flag,x+18,y-26);
+  if(game.B) ctx.fillText(game.B.team.flag,x+w-18,y-26);
+
+  /* ball (animates between zones) */
+  const zoneX=(z)=>x+w*(z+.5)/ZONES;
+  let bx=zoneX(md.zone), by=y+h/2;
+  if(md.ballAnim){
+    const k=clamp((performance.now()-md.ballAnim.t0)/420,0,1);
+    const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    bx=zoneX(md.ballAnim.from)+(zoneX(md.ballAnim.to)-zoneX(md.ballAnim.from))*e;
+    by=y+h/2-Math.sin(Math.PI*k)*46;
+    if(k>=1) md.ballAnim=null;
+  }
+  /* possession glow */
+  const pc=md.poss==="us"?"#3ddc7f":"#f87171";
+  ctx.beginPath(); ctx.arc(bx,by,26,0,Math.PI*2);
+  ctx.fillStyle=pc; ctx.globalAlpha=.18+Math.sin(game.idleT*.08)*.06; ctx.fill(); ctx.globalAlpha=1;
+  ctx.beginPath(); ctx.ellipse(bx,y+h/2+16,14,5,0,0,Math.PI*2);
+  ctx.fillStyle="rgba(0,0,0,.3)"; ctx.fill();
+  drawBall(ctx,bx,by,15,P().ball,game.idleT*.05);
+
+  /* attack direction arrow */
+  ctx.strokeStyle="rgba(255,255,255,.35)"; ctx.lineWidth=3;
+  const ay=y+h+26, dir=md.poss==="us"?1:-1;
+  ctx.beginPath();
+  ctx.moveTo(W/2-40*dir,ay); ctx.lineTo(W/2+40*dir,ay);
+  ctx.lineTo(W/2+22*dir,ay-9); ctx.moveTo(W/2+40*dir,ay); ctx.lineTo(W/2+22*dir,ay+9);
+  ctx.stroke();
+
+  /* scoreboard + clock */
+  drawMdScoreboard();
+  drawParticles();
+}
+function drawMdScoreboard(){
+  if(!game.A) return;
+  const A=game.A,B=game.B,x=12,y=12,w=300,h=52;
+  ctx.save();
+  ctx.fillStyle="rgba(6,13,26,.85)";
+  ctx.beginPath(); ctx.roundRect?ctx.roundRect(x,y,w,h,10):ctx.rect(x,y,w,h); ctx.fill();
+  ctx.strokeStyle="rgba(56,189,248,.4)"; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.roundRect?ctx.roundRect(x,y,w,h,10):ctx.rect(x,y,w,h); ctx.stroke();
+  ctx.textBaseline="middle";
+  ctx.font="22px -apple-system,Segoe UI,sans-serif"; ctx.textAlign="left";
+  ctx.fillText(A.team.flag,x+9,y+20);
+  ctx.textAlign="right"; ctx.fillText(B.team.flag,x+w-9,y+20);
+  ctx.fillStyle="#eef4fb"; ctx.font="italic 900 16px -apple-system,Segoe UI,sans-serif";
+  ctx.textAlign="left";  ctx.fillText(A.team.code,x+42,y+20);
+  ctx.textAlign="right"; ctx.fillText(B.team.code,x+w-42,y+20);
+  ctx.textAlign="center"; ctx.font="italic 900 21px -apple-system,Segoe UI,sans-serif";
+  ctx.fillStyle="#fbbf24"; ctx.fillText(`${md.us} – ${md.them}`,x+w/2,y+20);
+  ctx.font="900 12px -apple-system,Segoe UI,sans-serif"; ctx.fillStyle="#9db2c7";
+  ctx.fillText(`${mdClockText()}${md.halves>1?`  ·  ${md.half===1?"1st":"2nd"} half`:""}`,x+w/2,y+40);
+  ctx.restore();
+}
+
 /* ---------------- scene drawing ---------------- */
 function drawScene(){
+  if(md.active&&game.view==="pitch"){ drawPitchView(); return; }
   ctx.clearRect(0,0,W,H);
   game.idleT++;
 
@@ -2671,6 +2956,23 @@ function resolveKick(f){
 }
 function finishKick(result,f){
   game.state="result";
+  /* Match Day shot: report back to the phase engine instead of the shootout scoring */
+  if(md.active){
+    if(result.goal){
+      sfx.goal(); cheer(); game.crowdTimer=80;
+      game.ripple={x:f.tx,y:f.ty,t0:performance.now()};
+      burstConfetti(f.tx,f.ty,54);
+      startCelebration(game.A.team);
+      showMsg("GOAL!","",1400);
+    } else {
+      if(result.woodwork){ sfx.ping(); groan(); }
+      else if(result.saved){ sfx.save(); groan(); }
+      else { sfx.bad(); groan(); }
+      showMsg(result.why||"MISS!",result.sub||"",1400);
+    }
+    setTimeout(()=>{ const r=md.pendingAfterShot; md.pendingAfterShot=null; if(r) r(!!result.goal); },1600);
+    return;
+  }
   const s=side(game.kicker);
   s.kicks.push(!!result.goal);
   if(result.goal){
@@ -2751,6 +3053,22 @@ function resolveDefend(f){
 }
 function finishDefend(result,f){
   game.state="result";
+  /* Match Day save attempt: report back to the phase engine */
+  if(md.active){
+    if(result.saved){
+      sfx.save(); cheer(); game.crowdTimer=60;
+      burstConfetti(game.keeper.x,game.keeper.y,40);
+      showMsg("WHAT A SAVE!","🧤",1400);
+    } else if(result.missed){
+      sfx.good(); showMsg("THEY MISSED!",`${game.B.team.name} blaze it wide!`,1400);
+    } else {
+      sfx.bad(); groan();
+      game.ripple={x:f.tx,y:f.ty,t0:performance.now()};
+      showMsg(`${game.B.team.code} SCORE`,"",1400);
+    }
+    setTimeout(()=>{ const r=md.pendingAfterShot; md.pendingAfterShot=null; if(r) r(!!result.goal); },1600);
+    return;
+  }
   game.B.kicks.push(!!result.goal);
   if(result.saved){
     game.score+=5; P().saves++; saveStore();
@@ -2803,6 +3121,194 @@ function stepFlight(){
   if(!$("#screen-game").classList.contains("hidden")) drawScene();
   requestAnimationFrame(loop);
 })();
+
+/* ============================================================
+   MATCH DAY — phase engine
+   ============================================================ */
+function startMatchDay(opts){
+  /* opts: {myTeam, oppTeam, full:boolean, season:boolean} */
+  const p=P();
+  mini.active=false; clearInterval(mini.timer);
+  cup=cup&&game.mode==="cup"?cup:cup;
+  game.mode="matchday"; game.active=true; game.view="pitch";
+  game.A=newSide(opts.myTeam,me().name,true);
+  game.B=newSide(opts.oppTeam,TEAMS[opts.oppTeam].name,false);
+  game.score=0; game.streak=0; game.bestStreak=0;
+  game.tokens=Math.min(4,p.tutorialsDone.length); game.superArmed=false;
+  game.particles=[]; game.ripple=null; celebration=null;
+  Object.assign(md,{
+    active:true, zone:3, poss:"us", phase:0,
+    halves:opts.full?2:1, half:1,
+    phases:opts.full?26:13, minsPerPhase:opts.full?(90/26):(45/13),
+    clock:0, us:0, them:0, shots:0, shotsAgainst:0, passes:0, possWon:0, phasesWithBall:0,
+    ballAnim:null, seasonFixture:!!opts.season
+  });
+  loadFlagImg();
+  $("#commentary-wrap").classList.remove("hidden");
+  $("#btn-super").classList.add("hidden");
+  $("#defend-btns").classList.add("hidden");
+  show("game"); startCrowd(); sfx.whistle(false);
+  say("kickoff"); updateMdHUD();
+  setTimeout(mdPhase,900);
+}
+function updateMdHUD(){
+  $("#hud-round").textContent=`${mdClockText()}${md.halves>1?` · ${md.half===1?"1st":"2nd"} half`:""}`;
+  $("#hud-streak").textContent=`🔥 ×${game.streak}`;
+  $("#hud-score").textContent=`${game.A.team.code} ${md.us}–${md.them} ${game.B.team.code}`;
+  const zoneNames=["Your goal!","Your box","Your half","Midfield","Their half","Their box","Their goal!"];
+  $("#tokens-left").textContent=`${md.poss==="us"?"🟢 You have the ball":"🔴 They have the ball"} · ${zoneNames[md.zone]}`;
+}
+function moveBall(to){
+  const from=md.zone;
+  md.zone=clamp(to,0,ZONES-1);
+  md.ballAnim={from,to:md.zone,t0:performance.now()};
+}
+async function mdPhase(){
+  if(!md.active||!game.active) return;
+  /* half-time / full-time */
+  if(md.phase>=md.phases){
+    if(md.halves===2&&md.half===1){
+      md.half=2; md.clock=45; md.zone=3; md.poss="them";
+      showMsg("HALF TIME",`${game.A.team.code} ${md.us} – ${md.them} ${game.B.team.code}`,2200);
+      sfx.whistle(true);
+      md.phases=md.phases*2;                       // second half's worth of phases
+      await wait(2400);
+      if(!md.active) return;
+      say("kickoff"); updateMdHUD();
+    } else { endMatchDay(); return; }
+  }
+  md.phase++;
+  md.clock=Math.min(md.halves*45,Math.round(md.phase*md.minsPerPhase));
+  if(md.poss==="us") md.phasesWithBall++;
+  updateMdHUD();
+  setTip(md.poss==="us"?"Answer to complete the pass!":"Answer to win the ball back!");
+  await wait(450);
+  if(!md.active||!game.active) return;
+
+  const ok=await askQuestion();
+  if(!md.active||!game.active) return;
+
+  if(md.poss==="us"){
+    if(ok){
+      md.passes++;
+      const surge=game.streak>=3&&Math.random()<.4?2:1;
+      game.streak++;
+      game.bestStreak=Math.max(game.bestStreak,game.streak);
+      moveBall(md.zone+surge);
+      say(surge>1?"surge":"pass");
+      if(md.zone>=ZONES-1){ await mdShoot(); return; }
+      if(md.zone===ZONES-2) say("finalThird");
+    } else {
+      game.streak=0; md.poss="them"; say("lost"); sfx.bad();
+    }
+  } else {
+    if(ok){ md.poss="us"; md.possWon++; game.streak++; say("won"); }
+    else {
+      game.streak=0;
+      moveBall(md.zone-1);
+      say(md.zone<=1?"danger":"theyAdvance");
+      if(md.zone<=0){ await mdDefend(); return; }
+    }
+  }
+  updateMdHUD();
+  await wait(1100);
+  mdPhase();
+}
+/* shooting chance — reuse the close-up goal view and the existing swipe mechanics */
+async function mdShoot(){
+  md.shots++;
+  say("finalThird");
+  showMsg("SHOOTING CHANCE!","Swipe to score!",1400);
+  await wait(1200);
+  if(!md.active) return;
+  game.view="goal"; game.kicker="A";
+  game.keeper.kit=game.B.team;
+  resetPositions();
+  setTip("Pick your spot and swipe!");
+  if(game.tokens>0){ const b=$("#btn-super"); b.classList.remove("hidden"); b.classList.toggle("on",game.superArmed); }
+  const scored=await new Promise(res=>{ md.pendingAfterShot=res; game.state="aim"; });
+  if(!md.active) return;
+  $("#btn-super").classList.add("hidden");
+  game.view="pitch";
+  if(scored){
+    md.us++; P().goals++; saveStore();
+    dailyProgress("goals"); award("firstGoal");
+    if(game.streak>=3) award("hatTrick");
+    say("goal"); md.zone=3; md.poss="them";
+  } else {
+    say("saved"); md.zone=2; md.poss="them";
+  }
+  md.ballAnim=null;
+  updateMdHUD();
+  await wait(1400);
+  mdPhase();
+}
+/* they are through on goal — reuse the dive mechanics */
+async function mdDefend(){
+  md.shotsAgainst++;
+  say("danger");
+  showMsg("THEY SHOOT!","Pick where to dive!",1300);
+  await wait(1100);
+  if(!md.active) return;
+  game.view="goal"; game.kicker="B";
+  game.keeper.kit=game.A.team;
+  resetPositions();
+  game.state="defendChoose";
+  setTip(`${game.B.team.name} are shooting — dive!`);
+  $("#defend-btns").classList.remove("hidden");
+  const conceded=await new Promise(res=>{ md.pendingAfterShot=res; });
+  if(!md.active) return;
+  game.view="pitch";
+  if(conceded){ md.them++; say("conceded"); md.zone=3; md.poss="us"; }
+  else { P().saves++; saveStore(); dailyProgress("saves"); say("saved"); md.zone=2; md.poss="us"; }
+  md.ballAnim=null;
+  updateMdHUD();
+  await wait(1400);
+  mdPhase();
+}
+function endMatchDay(){
+  md.active=false; game.active=false;
+  stopCrowd(); sfx.whistle(true);
+  game.view="goal";
+  $("#commentary-wrap").classList.add("hidden");
+  const p=P(), won=md.us>md.them, drew=md.us===md.them;
+  p.matchStats.played++;
+  p.matchStats[won?"won":drew?"drawn":"lost"]++;
+  p.matchStats.goalsFor+=md.us; p.matchStats.goalsAgainst+=md.them;
+  const pts=md.us*12+md.possWon*3+(won?30:drew?10:0);
+  game.score=pts;
+  const isBest=pts>p.highScore;
+  if(isBest) p.highScore=pts;
+  saveStore();
+  if(won){ dailyProgress("win"); givePacks(1); }
+  if(md.passes>=25) award("playmaker");
+  if(won&&md.them===0) award("cleanSheet");
+  const possPct=Math.round(md.phasesWithBall/Math.max(1,md.phase)*100);
+  $("#summary-title").textContent = won?pick([`You beat ${game.B.team.name}, ${me().name}! 🎉`,`Great win, ${me().name}! 🏆`])
+    : drew?`A hard-earned draw, ${me().name}! 🤝` : `${game.B.team.name} edge it — rematch? 😤`;
+  $("#summary-score").innerHTML=`
+    <div><span class="fl">${game.A.team.flag}</span><span class="code">${game.A.team.code}</span></div>
+    <span class="num">${md.us}</span><span class="dash">–</span><span class="num">${md.them}</span>
+    <div><span class="fl">${game.B.team.flag}</span><span class="code">${game.B.team.code}</span></div>`;
+  const list=$("#summary-list"); list.innerHTML="";
+  [["⚽ Shots",`${md.shots} for · ${md.shotsAgainst} against`],
+   ["🎯 Passes completed",String(md.passes)],
+   ["🧤 Balls won back",String(md.possWon)],
+   ["📊 Possession",`${possPct}%`],
+   ["🌟 Points",String(pts)]].forEach(([k,v],i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span>${k}</span><span>${v}${i===4&&isBest?' <span class="new-badge">NEW BEST!</span>':""}</span>`;
+    list.appendChild(li);
+  });
+  if(won){ burstConfetti(W/2,H/2,80); sfx.prize(); }
+  const inSeason=md.seasonFixture&&season;
+  $("#btn-again").style.display=inSeason?"none":"";
+  $("#btn-summary-next").style.display=inSeason?"":"none";
+  $("#btn-summary-next").textContent="📊 See the table";
+  if(inSeason) seasonFixtureDone(md.us,md.them);
+  checkGlobalAchievements();
+  $("#summary-modal").classList.remove("hidden");
+}
 
 /* ---------------- match end ---------------- */
 function endMatch(){
@@ -2867,7 +3373,8 @@ function endMatch(){
 }
 $("#btn-again").addEventListener("click",()=>{
   sfx.tap(); $("#summary-modal").classList.add("hidden");
-  if(game.mode==="mini") startMini(mini.type);
+  if(game.mode==="matchday") startMatchDay({myTeam:P().myTeam,oppTeam:P().oppTeam,full:md.halves===2});
+  else if(game.mode==="mini") startMini(mini.type);
   else if(game.mode==="duel") startMatch({mode:"duel",duel:duelSel});
   else startMatch({mode:"solo",myTeam:P().myTeam,oppTeam:P().oppTeam});
 });
@@ -2876,17 +3383,40 @@ $("#btn-summary-menu").addEventListener("click",()=>{
 });
 $("#btn-summary-next").addEventListener("click",()=>{
   sfx.tap(); $("#summary-modal").classList.add("hidden");
+  if(game.mode==="matchday"&&season){ renderSeason(); show("season"); return; }
   if(!cup){ refreshHub(); show("hub"); return; }
   renderBracket(); show("bracket");
 });
+$("#btn-season-new").addEventListener("click",()=>{sfx.tap();openTeamSelect("season");});
 $("#btn-quit").addEventListener("click",()=>{
   game.active=false;
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   quizModal.classList.add("hidden");
   stopCrowd(); sfx.tap();
+  if(md.active){
+    md.active=false; game.view="goal";
+    if(md.pendingAfterShot){ const r=md.pendingAfterShot; md.pendingAfterShot=null; r(false); }
+    $("#commentary-wrap").classList.add("hidden");
+    $("#defend-btns").classList.add("hidden");
+    refreshHub(); show("hub"); return;
+  }
   if(mini.active){ mini.active=false; clearInterval(mini.timer); refreshHub(); show("arena"); refreshArena(); return; }
   refreshHub(); show("hub");
 });
+
+/* time-on-task, for the parent dashboard */
+let playTickAt=null;
+setInterval(()=>{
+  const playing=!$("#screen-game").classList.contains("hidden");
+  const now=Date.now();
+  if(playing&&playTickAt){
+    const p=P();
+    p.playMs=(p.playMs||0)+Math.min(now-playTickAt,10000);
+    p.lastPlayed=todayKey();
+  }
+  playTickAt=playing?now:null;
+  if(playing&&Math.random()<.15) saveStore();     // persist occasionally, not every tick
+},5000);
 
 /* ============================================================
    10. TEAM SELECT (solo + cup entry)
@@ -2897,11 +3427,25 @@ function openTeamSelect(mode){
   pendingMode=mode;
   selMy=P().myTeam; selOpp=P().oppTeam;
   if(selOpp===selMy) selOpp=TEAM_IDS.find(t=>t!==selMy);
-  $("#teams-title").textContent = mode==="cup" ? `${TIERS[pendingTier].icon} Choose Your Nation` : "Match Setup";
-  $("#opp-block").style.display = mode==="cup" ? "none" : "";
+  $("#teams-title").textContent = mode==="cup" ? `${TIERS[pendingTier].icon} Choose Your Nation`
+    : mode==="matchday" ? "⚽ Match Day"
+    : mode==="season" ? "🗓️ Choose Your Club" : "Match Setup";
+  $("#opp-block").style.display = (mode==="cup"||mode==="season") ? "none" : "";
+  $("#length-block").classList.toggle("hidden", mode!=="matchday");
+  /* default the length by rank — younger/newer players get the short game */
+  matchLen = rankOf().id>=2 ? "full" : "quick";
+  renderLengthRow();
+  $("#btn-kickoff").textContent = mode==="season" ? "🗓️ Start Season" : "⚽ Kick Off";
   renderTeamGrids();
   show("teams");
 }
+let matchLen="quick";
+function renderLengthRow(){
+  $$("#length-row .who-chip").forEach(b=>b.classList.toggle("sel",b.dataset.len===matchLen));
+}
+$$("#length-row .who-chip").forEach(b=>b.addEventListener("click",()=>{
+  sfx.tap(); matchLen=b.dataset.len; renderLengthRow();
+}));
 /* builds a confederation-grouped, scrollable flag picker into `host` */
 function buildTeamPicker(host,selectedId,onPick,disabledId,selClass){
   host.innerHTML="";
@@ -2931,9 +3475,11 @@ function renderTeamGrids(){
 $("#btn-kickoff").addEventListener("click",()=>{
   sfx.tap();
   const p=P();
-  p.myTeam=selMy; if(pendingMode!=="cup") p.oppTeam=selOpp;
+  p.myTeam=selMy; if(pendingMode==="solo"||pendingMode==="matchday") p.oppTeam=selOpp;
   saveStore();
   if(pendingMode==="cup") startCup(pendingTier);
+  else if(pendingMode==="season") startSeason();
+  else if(pendingMode==="matchday") startMatchDay({myTeam:selMy,oppTeam:selOpp,full:matchLen==="full"});
   else startMatch({mode:"solo",myTeam:selMy,oppTeam:selOpp});
 });
 
@@ -3231,6 +3777,112 @@ function openCupHome(){
   show("cup-home");
 }
 let pendingTier="bronze";
+
+/* ============================================================
+   11b. SEASON — a five-match league of Match Day fixtures
+   ============================================================ */
+let season=null;
+function saveSeason(){ P().seasonSave=season; saveStore(); }
+function startSeason(){
+  const others=shuffle(TEAM_IDS.filter(t=>t!==selMy)).slice(0,5);
+  season={ myTeam:selMy, teams:[selMy].concat(others), fixture:0, table:{}, done:false, champion:null };
+  season.teams.forEach(id=>{ season.table[id]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}; });
+  saveSeason();
+  renderSeason(); show("season");
+}
+function seasonAdd(id,gf,ga){
+  const r=season.table[id]; if(!r) return;
+  r.p++; r.gf+=gf; r.ga+=ga;
+  if(gf>ga){r.w++;r.pts+=3;} else if(gf===ga){r.d++;r.pts+=1;} else r.l++;
+}
+function seasonSorted(){
+  return season.teams.slice().sort((a,b)=>{
+    const A=season.table[a],B=season.table[b];
+    return B.pts-A.pts || (B.gf-B.ga)-(A.gf-A.ga) || B.gf-A.gf;
+  });
+}
+function seasonNextOpponent(){
+  const rest=season.teams.filter(t=>t!==season.myTeam);
+  return rest[season.fixture%rest.length];
+}
+function seasonFixtureDone(myGoals,oppGoals){
+  const my=season.myTeam, opp=seasonNextOpponent();
+  seasonAdd(my,myGoals,oppGoals); seasonAdd(opp,oppGoals,myGoals);
+  /* simulate the other clubs' matches this round */
+  const rest=season.teams.filter(t=>t!==my&&t!==opp);
+  for(let i=0;i+1<rest.length;i+=2){
+    const x=rnd(0,4),y=rnd(0,4);
+    seasonAdd(rest[i],x,y); seasonAdd(rest[i+1],y,x);
+  }
+  season.fixture++;
+  if(season.fixture>=season.teams.length-1){
+    season.done=true;
+    season.champion=seasonSorted()[0];
+    if(season.champion===my) winSeason();
+    else { P().seasonSave=null; saveStore(); }
+  }
+  saveSeason();
+}
+function winSeason(){
+  const p=P();
+  p.seasonsWon=(p.seasonsWon||0)+1;
+  p.seasonSave=null;
+  saveStore();
+  award("champions");
+  showReward("🗓️",`${TEAMS[p.myTeam].name} are league champions!`,
+    "Top of the table after five matches — a brilliant season.");
+  givePacks(4,"Title winners!");
+}
+function renderSeason(){
+  const my=season.myTeam;
+  const host=$("#season-body"); host.innerHTML="";
+  const tbl=document.createElement("div"); tbl.className="table-box";
+  tbl.innerHTML=`<div class="tr th"><span class="tc-team">Club</span><span>P</span><span>GD</span><span>Pts</span></div>`;
+  seasonSorted().forEach((id,i)=>{
+    const r=season.table[id],t=TEAMS[id];
+    const row=document.createElement("div");
+    row.className="tr"+(id===my?" me":"")+(i===0?" qual":"");
+    row.innerHTML=`<span class="tc-team">${i+1}. ${t.flag} ${t.name}${id===my?" (you)":""}</span>
+      <span>${r.p}</span><span>${r.gf-r.ga>0?"+":""}${r.gf-r.ga}</span><span class="pts">${r.pts}</span>`;
+    tbl.appendChild(row);
+  });
+  host.appendChild(tbl);
+  const note=document.createElement("p");
+  note.className="table-note";
+  const total=season.teams.length-1;
+  note.textContent=season.done
+    ? (season.champion===my?"🏆 Champions! What a season.":`Season over — ${TEAMS[season.champion].name} took the title.`)
+    : `Match ${season.fixture+1} of ${total} — next up: ${TEAMS[seasonNextOpponent()].flag} ${TEAMS[seasonNextOpponent()].name}`;
+  host.appendChild(note);
+  const btn=$("#btn-season-next");
+  btn.textContent=season.done?"🏠 Back to Menu":`▶ Play Match ${season.fixture+1} of ${total}`;
+}
+$("#btn-season-next").addEventListener("click",()=>{
+  sfx.tap();
+  if(!season||season.done){ P().seasonSave=null; saveStore(); season=null; refreshHub(); show("hub"); return; }
+  startMatchDay({myTeam:season.myTeam,oppTeam:seasonNextOpponent(),full:false,season:true});
+});
+$("#btn-season-quit").addEventListener("click",()=>{ sfx.tap(); saveSeason(); refreshHub(); show("hub"); });
+function openSeasonHome(){
+  const p=P(), saved=p.seasonSave;
+  const box=$("#season-resume");
+  if(saved&&!saved.done){
+    box.classList.remove("hidden");
+    box.innerHTML=`<div class="resume-inner">
+        <div><div class="resume-title">🗓️ Continue your season</div>
+        <div class="resume-sub">Match ${saved.fixture+1} of ${saved.teams.length-1} with ${TEAMS[saved.myTeam].flag} ${TEAMS[saved.myTeam].name}</div></div>
+        <button class="btn primary" id="btn-season-resume">▶ Continue</button>
+      </div>`;
+    $("#btn-season-resume").addEventListener("click",()=>{
+      sfx.tap(); season=saved; P().myTeam=season.myTeam; saveStore();
+      renderSeason(); show("season");
+    });
+  } else box.classList.add("hidden");
+  $("#season-intro").textContent = p.seasonsWon
+    ? `You've won the title ${p.seasonsWon} time${p.seasonsWon>1?"s":""}. Fancy another?`
+    : "Five league matches against five clubs. Finish top of the table to be champions!";
+  show("season-home");
+}
 
 /* ============================================================
    12. DUEL SETUP
@@ -3908,12 +4560,113 @@ $("#btn-sound").addEventListener("click",()=>{
 });
 $("#btn-play").addEventListener("click",()=>{sfx.tap();openTeamSelect("solo");});
 $("#btn-cup").addEventListener("click",()=>{sfx.tap();openCupHome();});
+$("#btn-matchday").addEventListener("click",()=>{sfx.tap();openTeamSelect("matchday");});
+$("#btn-season").addEventListener("click",()=>{sfx.tap();openSeasonHome();});
 $("#btn-duel").addEventListener("click",()=>{sfx.tap();openDuel();});
 $("#btn-draw").addEventListener("click",()=>{sfx.tap();refreshStudioPick();show("studio-pick");});
 $("#btn-trophies").addEventListener("click",()=>{sfx.tap();refreshTrophies();show("trophies");});
 $("#btn-locker").addEventListener("click",()=>{sfx.tap();refreshLocker();show("locker");});
 $("#btn-album").addEventListener("click",()=>{sfx.tap();refreshAlbum();show("album");});
 $("#btn-arena").addEventListener("click",()=>{sfx.tap();refreshArena();show("arena");});
+
+/* ============================================================
+   16. PARENT DASHBOARD (behind a small maths gate)
+   ============================================================ */
+const TOPIC_LABELS={
+  add:"Addition",sub:"Subtraction",count:"Counting",word:"Words & pictures",fact:"General facts",
+  bonds:"Number bonds",double:"Doubling",half:"Halving",shape:"Shapes",seq:"Sequences",
+  times:"Times tables",missing:"Missing numbers",clock:"Telling the time",money:"Money",
+  big:"Bigger addition",triple:"Three-number sums",
+  divide:"Division",decimal:"Decimals",perimeter:"Perimeter",area:"Area",compare:"Comparing fractions",
+  round:"Rounding",negtemp:"Negative numbers",twostep:"Two-step problems",bigmult:"Long multiplication",
+  equiv:"Equivalent fractions",mean:"Averages",fraction:"Fractions of amounts",geo:"Geography & science",
+  bodmas:"BODMAS",algebra:"Algebra",percent:"Percentages",square:"Squares & cubes",ratio:"Ratio",
+  negative:"Negative numbers",brackets:"Brackets",pctchange:"Percentage change",primes:"Primes",
+  hcflcm:"HCF & LCM",indices:"Index laws",probability:"Probability",twostepalg:"Two-step algebra",gk:"General knowledge"
+};
+function openGate(){
+  const a=rnd(11,19),b=rnd(12,19),ans=a*b;
+  $("#gate-q").textContent=`To keep little ones out: what is ${a} × ${b}?`;
+  const host=$("#gate-answers"); host.innerHTML="";
+  shuffle([ans,ans+rnd(1,9),ans-rnd(1,9),ans+rnd(10,30)]).forEach(v=>{
+    const btn=document.createElement("button");
+    btn.className="ans-btn"; btn.textContent=String(v);
+    btn.addEventListener("click",()=>{
+      if(v===ans){ sfx.good(); $("#gate-modal").classList.add("hidden"); renderParent(); show("parent"); }
+      else { sfx.bad(); btn.classList.add("wrong"); }
+    });
+    host.appendChild(btn);
+  });
+  $("#gate-modal").classList.remove("hidden");
+}
+$("#btn-grownups").addEventListener("click",()=>{sfx.tap();openGate();});
+$("#btn-gate-cancel").addEventListener("click",()=>{sfx.tap();$("#gate-modal").classList.add("hidden");});
+function fmtTime(ms){
+  const mins=Math.round((ms||0)/60000);
+  if(mins<60) return `${mins} min`;
+  return `${Math.floor(mins/60)}h ${mins%60}m`;
+}
+function renderParent(){
+  const host=$("#parent-body"); host.innerHTML="";
+  const keys=["6","10","12"].concat(store.profiles.guest&&store.profiles.guest.name?["guest"]:[]);
+  keys.forEach(k=>{
+    const p=PROF(k), inf=info(k), r=rankOf(p);
+    const topics=Object.keys(p.topicStats||{})
+      .map(t=>({t,...p.topicStats[t],acc:p.topicStats[t].seen?p.topicStats[t].right/p.topicStats[t].seen:0}))
+      .filter(x=>x.seen>=3)
+      .sort((a,b)=>a.acc-b.acc);
+    const answered=Object.values(p.topicStats||{}).reduce((a,c)=>a+c.seen,0);
+    const rightTotal=Object.values(p.topicStats||{}).reduce((a,c)=>a+c.right,0);
+    const overall=answered?Math.round(rightTotal/answered*100):null;
+    const card=document.createElement("div");
+    card.className="card parent-card";
+    card.innerHTML=`
+      <div class="pc-head">
+        <span class="pc-avatar">${inf.avatar}</span>
+        <div>
+          <div class="pc-name">${inf.name} <span class="pc-rank" style="color:${r.colour}">${r.icon} ${r.name}</span></div>
+          <div class="pc-sub">Age level ${inf.level} · last played ${p.lastPlayed||"—"}</div>
+        </div>
+      </div>
+      <div class="pc-stats">
+        <div><b>${answered}</b><span>questions</span></div>
+        <div><b>${overall===null?"—":overall+"%"}</b><span>accuracy</span></div>
+        <div><b>${fmtTime(p.playMs)}</b><span>time played</span></div>
+        <div><b>${p.matchStats.played}</b><span>matches</span></div>
+        <div><b>${p.cups}</b><span>cups</span></div>
+        <div><b>${stickerCountFor(p)}/${STICKERS.length}</b><span>stickers</span></div>
+      </div>
+      <div class="pc-topics"></div>`;
+    const tHost=card.querySelector(".pc-topics");
+    if(!topics.length){
+      tHost.innerHTML=`<p class="table-note" style="text-align:left">Not enough answers yet — topic breakdown appears once they've had a few goes.</p>`;
+    } else {
+      const weakest=topics[0], strongest=topics[topics.length-1];
+      const callouts=[];
+      /* only flag a weak spot if it genuinely is one */
+      if(weakest.acc<0.8)
+        callouts.push(`<span class="pc-weak">Needs practice: <b>${TOPIC_LABELS[weakest.t]||weakest.t}</b> (${Math.round(weakest.acc*100)}%)</span>`);
+      if(strongest.acc>=0.8&&(topics.length>1||weakest.acc>=0.8))
+        callouts.push(`<span class="pc-strong">Strongest: <b>${TOPIC_LABELS[strongest.t]||strongest.t}</b> (${Math.round(strongest.acc*100)}%)</span>`);
+      if(!callouts.length)
+        callouts.push(`<span class="pc-strong">Going well across the board 👍</span>`);
+      tHost.innerHTML=`<div class="pc-callouts">${callouts.join("")}</div>`;
+      topics.forEach(x=>{
+        const pct=Math.round(x.acc*100);
+        const col=pct<50?"var(--red)":pct<70?"var(--amber)":"var(--green)";
+        const row=document.createElement("div");
+        row.className="pc-topic";
+        row.innerHTML=`<span class="pt-name">${TOPIC_LABELS[x.t]||x.t}</span>
+          <span class="pt-bar"><span class="pt-fill" style="width:${pct}%;background:${col}"></span></span>
+          <span class="pt-pct" style="color:${col}">${pct}%</span>
+          <span class="pt-n">${x.right}/${x.seen}</span>`;
+        tHost.appendChild(row);
+      });
+    }
+    host.appendChild(card);
+  });
+}
+function stickerCountFor(p){ const st=p.stickers||{}; return STICKERS.filter(s=>st[s.id]>0).length; }
 
 refreshProfileBests();
 refreshGuestCard();
